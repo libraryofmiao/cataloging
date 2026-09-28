@@ -4,6 +4,14 @@ plugins {
  id("org.jetbrains.kotlin.plugin.serialization")
  id("org.jetbrains.kotlin.plugin.compose")
 }
+val copyRepoIcon by tasks.registering(Copy::class) {
+ from(rootProject.file("grok_1789741084333.jpg"))
+ into(layout.projectDirectory.dir("src/main/res/drawable"))
+ rename { "miao_library_icon.jpg" }
+}
+
+tasks.named("preBuild").configure { dependsOn(copyRepoIcon) }
+
 android {
  namespace="in.miaolibrary.cataloging"
  compileSdk=35
