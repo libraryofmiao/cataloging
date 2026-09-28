@@ -47,7 +47,8 @@ class BookExtractionCoordinator(
             (a + b + c).distinctBy { it.number + "|" + it.edition + "|" + it.source }
         }.getOrDefault(emptyList())
 
-        // DDC is evidence only: retain every number fetched from the OPACs/sites.\n        val evidenceFields = mutableMapOf<String, List<EvidenceValue>>()
+        // DDC is evidence only: retain every number fetched from the OPACs/sites.
+        val evidenceFields = mutableMapOf<String, List<EvidenceValue>>()
         fun addEvidence(field: String, value: String?) {
             if (!value.isNullOrBlank()) {
                 evidenceFields[field] = listOf(EvidenceValue(value, EvidenceSource.PHYSICAL, 0.90, true))
