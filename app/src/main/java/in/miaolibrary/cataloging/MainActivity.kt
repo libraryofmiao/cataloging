@@ -45,7 +45,7 @@ class MainActivity:ComponentActivity(){
         }
        }
       }
-      error!=null->Column(Modifier.fillMaxSize().padding(24.dp),verticalArrangement=Arrangement.spacedBy(androidx.compose.ui.unit.dp(16f))){
+      error!=null->Column(Modifier.fillMaxSize().padding(24.dp),verticalArrangement=Arrangement.spacedBy(16.dp)){
        Text("Gemini extraction failed",style=MaterialTheme.typography.headlineSmall)
        Text(error!!)
        Button({error=null;camera=true;capture=PhotoCaptureState()}){Text("CAPTURE AGAIN")}
