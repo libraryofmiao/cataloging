@@ -1,7 +1,5 @@
 package `in`.miaolibrary.cataloging.capture
 
-import `in`.miaolibrary.cataloging.BuildConfig
-
 import android.content.Context
 import android.content.SharedPreferences
 import android.graphics.Bitmap
@@ -27,7 +25,6 @@ class GeminiVisionEngine(
 
     fun getApiKey(): String =
         preferences.getString(KEY_GEMINI_API_KEY, null)?.trim().orEmpty()
-            .ifBlank { BuildConfig.GEMINI_API_KEY.trim() }
 
     fun saveApiKey(key: String) {
         require(key.trim().isNotEmpty()) { "Gemini API key cannot be empty." }
