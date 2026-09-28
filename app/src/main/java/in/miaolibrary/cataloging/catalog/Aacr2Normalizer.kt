@@ -15,7 +15,7 @@ object Aacr2Normalizer {
     fun normalize(input: CatalogRecord): NormalizationResult {
         val issues = mutableListOf<ValidationIssue>()
         val title = input.titleProper.trim().replace(Regex("\\s+"), " ")
-        if (title.isBlank()) issues += ValidationIssue("245$a", "Title proper is required.")
+        if (title.isBlank()) issues += ValidationIssue("245\$a", "Title proper is required.")
 
         val responsibility = input.statementOfResponsibility?.trim()
             ?.replace(Regex("\\s+"), " ")?.takeIf { it.isNotBlank() }
@@ -28,12 +28,12 @@ object Aacr2Normalizer {
 
         val normalizedIsbns = input.isbns.map { it.trim() }.filter { it.isNotBlank() }.distinct()
         normalizedIsbns.forEach {
-            if (!validIsbn(it)) issues += ValidationIssue("020$a", "Invalid ISBN: " + it + ".")
+            if (!validIsbn(it)) issues += ValidationIssue("020\$a", "Invalid ISBN: " + it + ".")
         }
 
         val ddc = input.ddc?.trim()?.takeIf { it.isNotBlank() }
         if (ddc != null && !ddcPattern.matches(ddc)) {
-            issues += ValidationIssue("082$a", "DDC must be a valid numeric class number.")
+            issues += ValidationIssue("082\$a", "DDC must be a valid numeric class number.")
         }
 
         val main = input.mainEntry?.let {
@@ -47,7 +47,7 @@ object Aacr2Normalizer {
             issues += ValidationIssue("100", "A personal statement of responsibility requires a usable main-entry name.")
         }
 
-        val callNumber = if (ddc != null && input.ddcEdition == "23" && main != null) {
+        val callNumber = if (ddc != null && main != null) {
             ddc + " " + main.surname.take(3).uppercase()
         } else null
 
