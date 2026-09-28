@@ -42,8 +42,8 @@ fun ProductionCatalogingScreen(initial: CatalogRecord? = null, onSubmit: (Catalo
             2 -> {
                 Text("3. AACR2 / MARC21 review", style = MaterialTheme.typography.titleLarge)
                 Text("All edits must be normalized and validated again before approval.")
-                OutlinedTextField(value = record.titleProper, onValueChange = { record = record.copy(titleProper = it) }, label = { Text("245 $a Title") }, modifier = Modifier.fillMaxWidth())
-                OutlinedTextField(value = record.ddc.orEmpty(), onValueChange = { record = record.copy(ddc = it) }, label = { Text("082 $a DDC") }, modifier = Modifier.fillMaxWidth())
+                OutlinedTextField(value = record.titleProper, onValueChange = { record = record.copy(titleProper = it) }, label = { Text("245 \\$a Title") }, modifier = Modifier.fillMaxWidth())
+                OutlinedTextField(value = record.ddc.orEmpty(), onValueChange = { record = record.copy(ddc = it) }, label = { Text("082 \\$a DDC") }, modifier = Modifier.fillMaxWidth())
                 Button(onClick = { step = 3 }, modifier = Modifier.fillMaxWidth()) { Text("REVALIDATE") }
             }
             3 -> {
