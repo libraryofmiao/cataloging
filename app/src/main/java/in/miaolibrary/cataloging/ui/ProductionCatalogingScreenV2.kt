@@ -168,10 +168,10 @@ fun ProductionCatalogingScreenV2(initial: CatalogRecord? = null) {
                 Text("Location: " + location + " • Source: " + source + " • Type: " + itemType)
                 drafts.forEach { Text("Copy " + it.copyNumber + ": barcode " + it.barcode) }
                 HorizontalDivider()
-                FieldV2("Koha API token", token, {
+                FieldV2("Koha API token", token, true) {
                     token = it
                     tokenStore.save(it)
-                }, password = true)
+                }
                 Text("The API token is encrypted with Android Keystore and is not displayed after leaving this screen.", style = MaterialTheme.typography.bodySmall)
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Checkbox(approved, { approved = it })
@@ -207,8 +207,8 @@ fun ProductionCatalogingScreenV2(initial: CatalogRecord? = null) {
 }
 
 @Composable
-private fun FieldV2(label: String, value: String, onValueChange: (String) -> Unit, password: Boolean = false) {
-    OutlinedTextFieldV2(
+private fun FieldV2(label: String, value: String, password: Boolean = false, onValueChange: (String) -> Unit) {
+    OutlinedTextField(
         value = value, onValueChange = onValueChange, label = { Text(label) }, modifier = Modifier.fillMaxWidth(),
         visualTransformation = if (password) PasswordVisualTransformation() else androidx.compose.ui.text.input.VisualTransformation.None
     )
