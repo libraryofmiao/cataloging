@@ -24,6 +24,7 @@ dependencies {
  implementation("com.google.mlkit:text-recognition-devanagari:16.0.1")
  implementation("com.google.android.gms:play-services-mlkit-language-id:17.0.0")
  implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.10.1")
+ implementation("org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.10.1")
  implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.7.3")
  implementation("com.squareup.okhttp3:okhttp:4.12.0")
  implementation("org.jsoup:jsoup:1.18.3")
