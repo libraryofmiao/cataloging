@@ -10,10 +10,10 @@ object Aacr2Normalizer {
  fun normalize(input:CatalogRecord):NormalizationResult {
   val issues=mutableListOf<ValidationIssue>()
   val title=input.titleProper.trim()
-  if(title.isBlank()) issues += ValidationIssue("245$a","Title proper is required.")
+  if(title.isBlank()) issues += ValidationIssue("245\$a","Title proper is required.")
   input.languages.forEach { if(it.code !in supportedLanguages) issues += ValidationIssue("041","Unsupported language code: ${it.code}.") }
-  input.isbns.forEach { if(!validIsbn(it)) issues += ValidationIssue("020$a","Invalid ISBN: ${it}.") }
-  if(input.ddc!=null && input.ddcEdition!="23") issues += ValidationIssue("082$2","Final DDC must be verified as edition 23.")
+  input.isbns.forEach { if(!validIsbn(it)) issues += ValidationIssue("020\$a","Invalid ISBN: ${it}.") }
+  if(input.ddc!=null && input.ddcEdition!="23") issues += ValidationIssue("082\$2","Final DDC must be verified as edition 23.")
   val main=input.mainEntry?.let { Person(it.surname.trim().replace(Regex("\\s+")," "),it.forename?.trim()?.replace(Regex("\\s+")," ")) }
   val call=input.ddc?.let { ddc -> main?.surname?.takeIf{it.isNotBlank()}?.let { "${ddc} ${it.take(3).uppercase()}" } }
   return NormalizationResult(input.copy(titleProper=title,mainEntry=main,callNumber=call),issues)
