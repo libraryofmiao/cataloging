@@ -9,6 +9,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import in.miaolibrary.cataloging.model.CatalogRecord
 import in.miaolibrary.cataloging.model.Person
+import in.miaolibrary.cataloging.model.Language
 
 private val LOCATIONS = listOf("CHILD", "GEN", "NALC", "NE", "RR", "RRRLF")
 private val SOURCES = listOf("RRRLF", "State Central Library", "Donation")
@@ -91,7 +92,7 @@ fun ProductionCatalogingScreen(initial: CatalogRecord? = null, onSubmit: (Catalo
                 }
                 Field("Language", record.languages.firstOrNull()?.name.orEmpty()) {
                     val code = languageCode(it)
-                    record = record.copy(languages = if (it.isBlank()) emptyList() else listOf(in.miaolibrary.cataloging.model.Language(it, code)))
+                    record = record.copy(languages = if (it.isBlank()) emptyList() else listOf(Language(it, code)))
                 }
                 Field("Series", record.series.orEmpty()) { record = record.copy(series = it.ifBlank { null }) }
                 Field("Contents", record.contents.orEmpty()) { record = record.copy(contents = it.ifBlank { null }) }
@@ -111,7 +112,7 @@ fun ProductionCatalogingScreen(initial: CatalogRecord? = null, onSubmit: (Catalo
                 Field("Author forename", record.mainEntry?.forename.orEmpty()) {
                     record = record.copy(mainEntry = Person(record.mainEntry?.surname.orEmpty(), it.ifBlank { null }))
                 }
-                Field("DDC 082 $a", record.ddc.orEmpty()) {
+                Field("DDC 082 \$a", record.ddc.orEmpty()) {
                     record = record.copy(ddc = it.ifBlank { null }, ddcEdition = if (it.isBlank()) null else "23")
                 }
                 Text("DDC edition: ${record.ddcEdition ?: "Not verified"}")
