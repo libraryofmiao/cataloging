@@ -44,6 +44,7 @@ class GeminiVisionEngine(
             putJsonObject("generationConfig") {
                 put("temperature", 0.0)
                 put("responseMimeType", "application/json")
+                put("maxOutputTokens", 4096)
             }
         }.toString()
         val request = Request.Builder()
