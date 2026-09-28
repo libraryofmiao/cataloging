@@ -47,10 +47,26 @@ class GeminiVisionEngine(
                 put("temperature", 0.0)
                 put("responseMimeType", "application/json")
                 put("maxOutputTokens", 4096)
+                putJsonObject("responseSchema") {
+                    put("type", "OBJECT")
+                    putJsonObject("properties") {
+                        listOf("title","author","publisher","publication_date","isbn","edition","main_pages","language",
+                            "printed_price","publication_place","preliminary_pages","illustrations","dimensions","series",
+                            "contents","summary","physical_warnings").forEach { key ->
+                            putJsonObject(key) { putJsonArray("type") { add("string"); add("null") } }
+                        }
+                    }
+                    putJsonArray("required") {
+                        listOf("title","author","publisher","publication_date","isbn","edition","main_pages","language",
+                            "printed_price","publication_place","preliminary_pages","illustrations","dimensions","series",
+                            "contents","summary","physical_warnings").forEach { add(it) }
+                    }
+                }
             }
         }.toString()
         val request = Request.Builder()
-            .url("https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=$apiKey")
+            .url("https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent")
+            .header("x-goog-api-key", apiKey)
             .header("Content-Type", "application/json")
             .post(body.toRequestBody("application/json".toMediaType()))
             .build()
