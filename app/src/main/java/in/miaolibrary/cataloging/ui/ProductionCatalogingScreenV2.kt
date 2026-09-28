@@ -194,7 +194,7 @@ fun ProductionCatalogingScreenV2(initial: CatalogRecord? = null) {
                         drafts = drafts.toMutableList().also { list -> list[index] = draft.copy(location = value) }
                     }
                     ChoiceMenu("Acquisition source", draft.acquisitionSource, SOURCES) { value ->
-                        drafts = drafts.toMutableList().also { list -> list[index] = draft.copy(acquisitionSource = value, donorDetails = if (value == "Donation") draft.donorDetails else null) }
+                        drafts = drafts.toMutableList().also { list -> list[index] = draft.copy(acquisitionSource = value, donorDetails = if (value == "Donation") donorDetails.takeIf { it.isNotBlank() } else null) }
                     }
                     ChoiceMenu("Item type", draft.itemType, TYPES) { value ->
                         drafts = drafts.toMutableList().also { list -> list[index] = draft.copy(itemType = value) }
