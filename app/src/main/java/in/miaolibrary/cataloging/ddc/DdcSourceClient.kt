@@ -29,13 +29,23 @@ class DdcSourceClient {
     }
 
     private fun searchSource(source: Source, q: String): List<DdcCandidate> = runCatching {
-        val url = "${source.base}/cgi-bin/koha/opac-search.pl?idx=&q=${URLEncoder.encode(q, "UTF-8")}&count=20"
-        val html = http.newCall(Request.Builder().url(url).header("Accept", "text/html").build()).execute().use { if (it.isSuccessful) it.body?.string().orEmpty() else "" }
-        Jsoup.parse(html).select("a[href*='opac-detail.pl']").take(20).mapNotNull { a ->
-            val href = a.attr("abs:href")
-            val bib = Regex("[?&]biblionumber=(\\d+)").find(href)?.groupValues?.get(1) ?: return@mapNotNull null
-            fetch082(source, bib, href)
+        val all = mutableListOf<DdcCandidate>()
+        for (offset in listOf(0, 20, 40)) {
+            val url = "\${source.base}/cgi-bin/koha/opac-search.pl?idx=&q=\${URLEncoder.encode(q, "UTF-8")}&count=20&offset=\${offset}"
+            val html = http.newCall(Request.Builder().url(url).header("Accept", "text/html").build()).execute().use {
+                if (it.isSuccessful) it.body?.string().orEmpty() else ""
+            }
+            if (html.isBlank()) break
+            val page = Jsoup.parse(html).select("a[href*='opac-detail.pl']").take(20).mapNotNull { a ->
+                val href = a.attr("abs:href")
+                val bib = Regex("[?&]biblionumber=(\\d+)").find(href)?.groupValues?.get(1) ?: return@mapNotNull null
+                fetch082(source, bib, href)
+            }
+            all += page
+            if (page.any { it.edition == "23" }) break
+            if (page.size < 20) break
         }
+        all.distinctBy { it.source + "|" + it.sourceBiblionumber + "|" + it.number }
     }.getOrDefault(emptyList())
 
     private fun fetch082(source: Source, bib: String, recordUrl: String): DdcCandidate? {
