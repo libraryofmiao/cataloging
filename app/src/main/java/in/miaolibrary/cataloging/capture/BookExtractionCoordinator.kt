@@ -1,6 +1,6 @@
-package in.miaolibrary.cataloging.capture
+package `in`.miaolibrary.cataloging.capture
 
-import in.miaolibrary.cataloging.model.*
+import `in`.miaolibrary.cataloging.model.*
 
 class BookExtractionCoordinator(private val vision: VisionEngine) {
  suspend fun extract(state: PhotoCaptureState): CatalogRecord {
