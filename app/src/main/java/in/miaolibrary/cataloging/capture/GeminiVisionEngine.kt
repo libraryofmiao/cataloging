@@ -79,10 +79,16 @@ class GeminiVisionEngine(
         BitmapFactory.decodeFile(file.absolutePath, bounds)
         require(bounds.outWidth > 0 && bounds.outHeight > 0) { "Unable to read image: ${file.name}" }
         val maxDimension = 1600
-        val scale = minOf(1f, maxDimension.toFloat() / maxOf(bounds.outWidth, bounds.outHeight))
-        val width = (bounds.outWidth * scale).toInt().coerceAtLeast(1)
-        val height = (bounds.outHeight * scale).toInt().coerceAtLeast(1)
-        val bitmap = BitmapFactory.decodeFile(file.absolutePath) ?: throw IllegalStateException("Unable to decode image: ${file.name}")
+        var sample = 1
+        while (maxOf(bounds.outWidth / sample, bounds.outHeight / sample) > maxDimension) sample *= 2
+        val options = BitmapFactory.Options().apply {
+            inSampleSize = sample
+            inPreferredConfig = Bitmap.Config.RGB_565
+        }
+        val bitmap = BitmapFactory.decodeFile(file.absolutePath, options) ?: throw IllegalStateException("Unable to decode image: ${file.name}")
+        val scale = minOf(1f, maxDimension.toFloat() / maxOf(bitmap.width, bitmap.height))
+        val width = (bitmap.width * scale).toInt().coerceAtLeast(1)
+        val height = (bitmap.height * scale).toInt().coerceAtLeast(1)
         val scaled = if (bitmap.width == width && bitmap.height == height) bitmap else Bitmap.createScaledBitmap(bitmap, width, height, true)
         return ByteArrayOutputStream().use { out ->
             scaled.compress(Bitmap.CompressFormat.JPEG, 88, out)
