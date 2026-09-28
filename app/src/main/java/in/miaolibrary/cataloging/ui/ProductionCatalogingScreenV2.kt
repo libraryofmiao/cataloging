@@ -151,7 +151,7 @@ fun ProductionCatalogingScreenV2(initial: CatalogRecord? = null) {
                         approved = false
                         step = 4
                     }
-                }, enabled = location.isNotBlank() && source.isNotBlank() && record.ddc != null && ddcVerified, Modifier.fillMaxWidth()) {
+                }, enabled = location.isNotBlank() && source.isNotBlank() && record.ddc != null && ddcVerified, modifier = Modifier.fillMaxWidth()) {
                     Text("FINAL REVIEW")
                 }
                 message?.let { Text(it, color = MaterialTheme.colorScheme.error) }
@@ -198,7 +198,7 @@ fun ProductionCatalogingScreenV2(initial: CatalogRecord? = null) {
                             message = t.message ?: t.toString()
                         } finally { busy = false }
                     }
-                }, enabled = approved && token.isNotBlank() && !busy && drafts.isNotEmpty(), Modifier.fillMaxWidth()) {
+                }, enabled = approved && token.isNotBlank() && !busy && drafts.isNotEmpty(), modifier = Modifier.fillMaxWidth()) {
                     Text(if (biblioId == null) "CREATE IN KOHA" else "RETRY REMAINING ITEMS")
                 }
             }
