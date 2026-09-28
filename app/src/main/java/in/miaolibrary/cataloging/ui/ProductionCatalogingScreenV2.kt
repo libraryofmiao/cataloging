@@ -104,11 +104,32 @@ fun ProductionCatalogingScreenV2(initial: CatalogRecord? = null, onStartNewBook:
                     Text("I verified the DDC number against a DDC 23 source.")
                 }
                 Text("Call number: " + (record.callNumber ?: "Will be generated after validation"))
-                val ddcSources = record.evidence?.ddcCandidates.orEmpty().filter { it.edition == "23" }
-                if (ddcSources.isNotEmpty()) {
-                    Text("DDC 23 evidence sources:", style = MaterialTheme.typography.titleMedium)
-                    ddcSources.take(5).forEach { Text(it.number + " — " + it.source) }
-                } else Text("No verified DDC 23 candidate was found.")
+                val ddcSources = record.evidence?.ddcCandidates.orEmpty().filter { it.edition?.trim() == "23" }
+                val ddcNumbers = ddcSources.map { it.number.trim().removeSuffix(".") }.distinct()
+                when {
+                    ddcSources.isEmpty() -> {
+                        Text(
+                            "No exact DDC 23 source result. Enter a DDC 23 number only after catalogue review.",
+                            color = MaterialTheme.colorScheme.error
+                        )
+                    }
+                    ddcNumbers.size > 1 -> {
+                        Text(
+                            "DDC 23 disagreement — sources returned different numbers. Do not auto-select; review the evidence and enter the final number manually.",
+                            color = MaterialTheme.colorScheme.error
+                        )
+                        Text("DDC 23 evidence sources:", style = MaterialTheme.typography.titleMedium)
+                        ddcSources.take(10).forEach {
+                            Text(it.number + " — " + it.source)
+                        }
+                    }
+                    else -> {
+                        Text("DDC 23 evidence sources:", style = MaterialTheme.typography.titleMedium)
+                        ddcSources.take(10).forEach {
+                            Text(it.number + " — " + it.source)
+                        }
+                    }
+                }
                 FieldV2("Subjects (LCSH — librarian validated)", record.subjects.joinToString("; ")) {
                     record = record.copy(subjects = it.split(";").map(String::trim).filter(String::isNotBlank))
                     subjectsVerified = it.split(";").map(String::trim).any(String::isNotBlank).not()
