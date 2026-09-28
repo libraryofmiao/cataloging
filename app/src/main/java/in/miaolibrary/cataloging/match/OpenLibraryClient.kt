@@ -83,10 +83,29 @@ class OpenLibraryClient(private val http: OkHttpClient = OkHttpClient()) {
 }
 
 object DdcMatcher {
+    /**
+     * DDC 23 is accepted only when the evidence is edition-exact.
+     *
+     * The pipeline deliberately does NOT silently choose a higher-priority source
+     * when verified sources disagree. A disagreement is left for catalogue review;
+     * the UI can still display every candidate and its source.
+     */
     fun choose(candidates: List<DdcCandidate>, physicalDdc: String? = null): DdcCandidate? {
-        val verified = candidates.filter { it.edition == "23" && it.number.isNotBlank() }
+        val verified = candidates
+            .filter { it.edition?.trim() == "23" && it.number.isNotBlank() }
+            .map { it.copy(number = normalize(it.number)) }
+
         if (verified.isEmpty()) return null
-        val normalized = physicalDdc?.trim()
+
+        val distinctNumbers = verified.map { it.number }.distinct()
+        if (distinctNumbers.size != 1) return null
+
+        val normalizedPhysical = physicalDdc?.let(::normalize)?.takeIf { it.isNotBlank() }
+        if (normalizedPhysical != null && normalizedPhysical != distinctNumbers.single()) {
+            // Physical evidence conflicts with catalogue evidence: require review.
+            return null
+        }
+
         fun priority(source: String): Int = when {
             source.contains("Tezu", true) -> 6
             source.contains("State Central Library", true) -> 5
@@ -95,12 +114,26 @@ object DdcMatcher {
             source.contains("Open Library", true) -> 2
             else -> 1
         }
+
         return verified
             .sortedWith(
-                compareByDescending<DdcCandidate> { it.number == normalized }
-                    .thenByDescending { priority(it.source) }
+                compareByDescending<DdcCandidate> { priority(it.source) }
                     .thenByDescending { it.confidence }
             )
             .first()
     }
+
+    fun verifiedCandidates(candidates: List<DdcCandidate>): List<DdcCandidate> =
+        candidates
+            .filter { it.edition?.trim() == "23" && it.number.isNotBlank() }
+            .map { it.copy(number = normalize(it.number)) }
+
+    fun hasDisagreement(candidates: List<DdcCandidate>): Boolean =
+        verifiedCandidates(candidates).map { it.number }.distinct().size > 1
+
+    private fun normalize(value: String): String =
+        value.trim()
+            .replace(Regex("\\s+"), " ")
+            .removeSuffix(".")
+            .trim()
 }
