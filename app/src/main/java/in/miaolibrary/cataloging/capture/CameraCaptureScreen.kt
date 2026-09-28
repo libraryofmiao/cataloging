@@ -197,43 +197,6 @@ fun CameraCaptureScreen(
                 modifier = Modifier.fillMaxWidth()
             ) { Text("USE PHOTOS") }
         }
-            if (nextPhoto != null) {
-                Text("Next: " + nextPhoto.label)
-            } else {
-                Text("All required photographs captured.")
-            }
-            detectionMessage?.let { Text(it) }
 
-            Button(
-                onClick = {
-                    if (nextPhoto != null) {
-                        capturePhoto(nextPhoto)
-                    }
-                },
-                enabled = nextPhoto != null && !busy,
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Text(if (busy) "SAVING…" else "CAPTURE")
-            }
-
-            if (state.isComplete()) {
-                Text("Optional photographs", style = androidx.compose.material3.MaterialTheme.typography.titleMedium)
-                Text("Add contents, preface/introduction, or any other useful bibliographic page. These are sent to Gemini as additional evidence.")
-                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Button({ captureOptional("Contents") }, enabled = !busy, modifier = Modifier.weight(1f)) { Text("CONTENTS") }
-                    Button({ captureOptional("Preface") }, enabled = !busy, modifier = Modifier.weight(1f)) { Text("PREFACE") }
-                }
-                Button({ captureOptional("Other page") }, enabled = !busy, modifier = Modifier.fillMaxWidth()) { Text("OTHER PAGE") }
-                Text("Optional pages captured: " + state.optionalPhotos.size)
-            }
-
-            Button(
-                onClick = onComplete,
-                enabled = state.isComplete(),
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Text("USE PHOTOS")
-            }
-        }
     }
 }
