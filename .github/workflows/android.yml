@@ -19,3 +19,10 @@ jobs:
         run: |
           find app/src/main/java -type f -name '*.kt' -print0 | xargs -0 sed -i -E 's/\bin\.miaolibrary/\x60in\x60.miaolibrary/g'
       - run: gradle assembleDebug
+
+      - name: Upload debug APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: MiaoLibrary-Cataloging-debug-apk
+          path: app/build/outputs/apk/debug/*.apk
+          if-no-files-found: error
