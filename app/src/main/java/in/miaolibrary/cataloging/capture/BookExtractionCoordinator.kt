@@ -14,7 +14,7 @@ class BookExtractionCoordinator(
 ) {
     suspend fun extract(state: PhotoCaptureState): CatalogRecord {
         check(state.isComplete()) { "All four required photographs are required" }
-        val r = vision.extract(state.photos.values.toList())
+        val r = vision.extract(state.allPhotos())
 
         val authorPerson = parsePerson(r.author)
         val isbn = r.isbn?.trim()?.takeIf { it.isNotBlank() }
@@ -65,7 +65,7 @@ class BookExtractionCoordinator(
         addEvidence("020$c", r.printedPrice)
 
         val evidence = BookEvidence(
-            photos = state.photos.values.toList(),
+            photos = state.allPhotos(),
             fields = evidenceFields,
             ddcCandidates = candidates
         )
