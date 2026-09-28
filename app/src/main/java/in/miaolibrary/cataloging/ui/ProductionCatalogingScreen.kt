@@ -1,6 +1,8 @@
 package in.miaolibrary.cataloging.ui
 
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
@@ -21,7 +23,7 @@ fun ProductionCatalogingScreen(initial: CatalogRecord? = null, onSubmit: (Catalo
     var copies by remember { mutableIntStateOf(1) }
     var confirmed by remember { mutableStateOf(false) }
 
-    Column(Modifier.fillMaxSize().padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+    Column(Modifier.fillMaxSize().windowInsetsPadding(WindowInsets.navigationBars).verticalScroll(rememberScrollState()).padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
         Text("Miao Library Cataloging", style = MaterialTheme.typography.headlineSmall)
         Text("SDLM | AACR2 + MARC21 + DDC 23 + LCSH")
         LinearProgressIndicator(progress = { ((step + 1) / 5f).coerceIn(0f, 1f) }, modifier = Modifier.fillMaxWidth())
