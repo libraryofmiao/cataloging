@@ -73,7 +73,7 @@ fun CameraCaptureScreen(
         )
     }
 
-    Box(modifier = Modifier.fillMaxSize()) {
+    Box(modifier = Modifier.fillMaxSize().safeDrawingPadding()) {
         AndroidView(
             factory = { ctx ->
                 PreviewView(ctx).also { previewView ->
