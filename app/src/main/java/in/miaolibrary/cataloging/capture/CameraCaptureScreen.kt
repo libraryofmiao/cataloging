@@ -163,10 +163,40 @@ fun CameraCaptureScreen(
         ) {
             val nextPhoto = state.next()
 
-            RequiredPhoto.entries.forEach { required ->
-                val captured = state.photos[required]?.let { File(it).exists() } == true
-                Text((if (captured) "✓ " else "○ ") + required.label)
+            Text("Add useful pages", style = androidx.compose.material3.MaterialTheme.typography.titleMedium)
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                RequiredPhoto.entries.take(2).forEach { photo ->
+                    val captured = state.photos[photo]?.let { File(it).exists() } == true
+                    Button(
+                        onClick = { capturePhoto(photo) },
+                        enabled = !busy,
+                        modifier = Modifier.weight(1f)
+                    ) { Text(if (captured) "RETAKE " + photo.label else photo.label) }
+                }
             }
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                RequiredPhoto.entries.drop(2).forEach { photo ->
+                    val captured = state.photos[photo]?.let { File(it).exists() } == true
+                    Button(
+                        onClick = { capturePhoto(photo) },
+                        enabled = !busy,
+                        modifier = Modifier.weight(1f)
+                    ) { Text(if (captured) "RETAKE " + photo.label else photo.label) }
+                }
+            }
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                Button({ captureOptional("Contents") }, enabled = !busy, modifier = Modifier.weight(1f)) { Text("CONTENTS") }
+                Button({ captureOptional("PREFACE") }, enabled = !busy, modifier = Modifier.weight(1f)) { Text("PREFACE") }
+            }
+            Button({ captureOptional("OTHER PAGE") }, enabled = !busy, modifier = Modifier.fillMaxWidth()) { Text("OTHER PAGE") }
+            detectionMessage?.let { Text(it) }
+            Text(state.allPhotos().size.toString() + " photo(s) ready")
+            Button(
+                onClick = onComplete,
+                enabled = state.allPhotos().isNotEmpty() && !busy,
+                modifier = Modifier.fillMaxWidth()
+            ) { Text("USE PHOTOS") }
+        }
             if (nextPhoto != null) {
                 Text("Next: " + nextPhoto.label)
             } else {
