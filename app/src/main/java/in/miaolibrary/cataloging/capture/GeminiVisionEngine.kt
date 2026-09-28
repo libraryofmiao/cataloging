@@ -54,7 +54,6 @@ class GeminiVisionEngine(
         val body = buildJsonObject {
             putJsonObject("contents") { putJsonArray("parts") { parts.forEach { add(it) } } }
             putJsonObject("generationConfig") {
-                put("temperature", 0.0)
                 put("responseMimeType", "application/json")
                 put("maxOutputTokens", 4096)
                 putJsonObject("responseSchema") {
@@ -75,7 +74,7 @@ class GeminiVisionEngine(
             }
         }.toString()
         val request = Request.Builder()
-            .url("https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent")
+            .url("https://generativelanguage.googleapis.com/v1beta/models/gemini-3.8-flash:generateContent")
             .header("x-goog-api-key", apiKey)
             .header("Content-Type", "application/json")
             .post(body.toRequestBody("application/json".toMediaType()))
