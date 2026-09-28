@@ -30,7 +30,7 @@ class MainActivity : ComponentActivity() {
             )) {
                 Surface(Modifier.fillMaxSize()) {
                     var capture by remember { mutableStateOf(PhotoCaptureState.restore(photoPrefs)) }
-                    var camera by remember { mutableStateOf(true) }
+                    var camera by remember { mutableStateOf(record == null) }
                     var extracting by remember { mutableStateOf(false) }
                     var record by remember { mutableStateOf<CatalogRecord?>(draftStore.get()) }
                     var error by remember { mutableStateOf<String?>(null) }
