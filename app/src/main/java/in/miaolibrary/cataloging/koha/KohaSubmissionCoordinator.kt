@@ -1,6 +1,5 @@
 package `in`.miaolibrary.cataloging.koha
 
-import `in`.miaolibrary.cataloging.marc.Marc21Builder
 import `in`.miaolibrary.cataloging.marc.MarcInJsonEncoder
 import `in`.miaolibrary.cataloging.model.CatalogRecord
 import `in`.miaolibrary.cataloging.model.CopyDraft
@@ -13,7 +12,7 @@ class KohaSubmissionCoordinator(private val api: KohaApiClient) {
     suspend fun submit(record: CatalogRecord, copies: List<CopyDraft>, existingBiblioId: String? = null): KohaSubmissionResult =
         withContext(Dispatchers.IO) {
             require(copies.isNotEmpty()) { "At least one copy is required" }
-            val biblioId = existingBiblioId ?: api.createBiblio(MarcInJsonEncoder.encode(Marc21Builder.build(record)))
+            val biblioId = existingBiblioId ?: api.createBiblio(MarcInJsonEncoder.encode(record))
             val created = mutableListOf<String>()
             for (copy in copies) {
                 try {
