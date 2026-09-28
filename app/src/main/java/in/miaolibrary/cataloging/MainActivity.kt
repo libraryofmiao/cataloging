@@ -50,7 +50,7 @@ class MainActivity : ComponentActivity() {
                                 Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(14.dp)) {
                                     CircularProgressIndicator()
                                     Text("Reading book pages…", style = MaterialTheme.typography.titleMedium)
-                                    Text("Gemini 2.5 Flash • physical-book evidence extraction", style = MaterialTheme.typography.bodyMedium)
+                                    Text("Analyzing…", style = MaterialTheme.typography.bodyMedium)
                                 }
                             }
                         }
