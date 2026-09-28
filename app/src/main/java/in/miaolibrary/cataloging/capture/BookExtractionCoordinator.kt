@@ -47,20 +47,20 @@ class BookExtractionCoordinator(
             (a + b + c).distinctBy { it.number + "|" + it.edition + "|" + it.source }
         }.getOrDefault(emptyList())
 
-        // DDC is evidence only: retain every number fetched from the OPACs/sites.
+        // DDC is evidence only: retain every number fetched from the configured OPACs/sites.
         val evidenceFields = mutableMapOf<String, List<EvidenceValue>>()
         fun addEvidence(field: String, value: String?) {
             if (!value.isNullOrBlank()) {
                 evidenceFields[field] = listOf(EvidenceValue(value, EvidenceSource.PHYSICAL, 0.90, true))
             }
         }
-        addEvidence("245$a", r.title)
-        addEvidence("245$c", r.author)
-        addEvidence("264$a", r.publicationPlace)
-        addEvidence("264$b", r.publisher)
-        addEvidence("264$c", r.publicationDate)
-        addEvidence("020$a", r.isbn)
-        addEvidence("020$c", r.printedPrice)
+        addEvidence("245\$a", r.title)
+        addEvidence("245\$c", r.author)
+        addEvidence("264\$a", r.publicationPlace)
+        addEvidence("264\$b", r.publisher)
+        addEvidence("264\$c", r.publicationDate)
+        addEvidence("020\$a", r.isbn)
+        addEvidence("020\$c", r.printedPrice)
         identityMatches.firstOrNull()?.let { match ->
             if (!match.title.isNullOrBlank()) evidenceFields["external.title"] = listOf(EvidenceValue(match.title, EvidenceSource.EXTERNAL_CATALOGUE, match.confidence, false))
             if (!match.author.isNullOrBlank()) evidenceFields["external.author"] = listOf(EvidenceValue(match.author, EvidenceSource.EXTERNAL_CATALOGUE, match.confidence, false))
