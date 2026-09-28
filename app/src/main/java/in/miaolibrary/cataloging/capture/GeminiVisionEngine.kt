@@ -66,11 +66,18 @@ class GeminiVisionEngine(
             .header("Content-Type", "application/json")
             .post(body.toRequestBody("application/json".toMediaType()))
             .build()
-        http.newCall(request).execute().use { response ->
-            val raw = response.body?.string().orEmpty()
-            if (!response.isSuccessful) throw IllegalStateException("Gemini request failed (${response.code}): ${raw.take(500)}")
-            parseResponse(raw)
+        repeat(3) { attempt ->
+            http.newCall(request).execute().use { response ->
+                val raw = response.body?.string().orEmpty()
+                if (response.isSuccessful) return@withContext parseResponse(raw)
+                if ((response.code == 429 || response.code >= 500) && attempt < 2) {
+                    kotlinx.coroutines.delay(250L shl attempt)
+                } else {
+                    throw IllegalStateException("Gemini request failed (${response.code}): ${raw.take(500)}")
+                }
+            }
         }
+        throw IllegalStateException("Gemini extraction failed")
     }
 
     private fun compressForGemini(file: File): ByteArray {
