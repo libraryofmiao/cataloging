@@ -19,6 +19,8 @@ jobs:
         run: |
           find app/src/main/java -type f -name '*.kt' -print0 | xargs -0 sed -i -E 's/(package|import)[[:space:]]+in\.miaolibrary/\1 \x60in\x60.miaolibrary/g'
       - name: Build debug APK
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
         run: gradle --no-daemon assembleDebug --stacktrace
       - name: Upload debug APK
         uses: actions/upload-artifact@v4
