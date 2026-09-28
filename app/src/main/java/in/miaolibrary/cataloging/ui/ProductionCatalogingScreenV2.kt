@@ -41,7 +41,6 @@ fun ProductionCatalogingScreenV2(initial: CatalogRecord? = null, onStartNewBook:
     var copies by remember { mutableIntStateOf(1) }
     var purchasePrice by remember { mutableStateOf("") }
     var donorDetails by remember { mutableStateOf("") }
-    var ddcVerified by remember { mutableStateOf(initial?.ddcEdition == "23") }
     var subjectsVerified by remember { mutableStateOf(initial?.subjects?.isEmpty() != false) }
     var token by remember { mutableStateOf(tokenStore.get().orEmpty()) }
     var approved by remember { mutableStateOf(false) }
@@ -91,17 +90,12 @@ fun ProductionCatalogingScreenV2(initial: CatalogRecord? = null, onStartNewBook:
                 Button({ step = 2 }, Modifier.fillMaxWidth()) { Text("VALIDATE") }
             }
             2 -> {
-                Text("AACR2 + DDC 23", style = MaterialTheme.typography.titleLarge)
+                Text("AACR2 + DDC", style = MaterialTheme.typography.titleLarge)
                 FieldV2("Author surname", record.mainEntry?.surname.orEmpty()) { record = record.copy(mainEntry = Person(it, record.mainEntry?.forename)) }
                 FieldV2("Author forename", record.mainEntry?.forename.orEmpty()) { record = record.copy(mainEntry = Person(record.mainEntry?.surname.orEmpty(), it.ifBlank { null })) }
                 FieldV2("DDC 082 a", record.ddc.orEmpty()) {
                     record = record.copy(ddc = it.ifBlank { null }, ddcEdition = null, callNumber = null)
                     ddcVerified = false
-                }
-                Text("DDC edition: " + (record.ddcEdition ?: "Not verified"))
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Checkbox(ddcVerified, { ddcVerified = it })
-                    Text("I verified the DDC number against a DDC 23 source.")
                 }
                 Text("Call number: " + (record.callNumber ?: "Will be generated after validation"))
                 val ddcSources = record.evidence?.ddcCandidates.orEmpty().filter { it.edition?.trim() == "23" }
@@ -144,7 +138,7 @@ fun ProductionCatalogingScreenV2(initial: CatalogRecord? = null, onStartNewBook:
                     val n = Aacr2Normalizer.normalize(record)
                     record = n.record
                     message = n.issues.joinToString("\n") { it.message }.takeIf(String::isNotBlank)
-                    if (n.valid && record.ddc != null && ddcVerified && subjectsVerified) step = 3
+                    if (n.valid && record.ddc != null && subjectsVerified) step = 3
                 }, Modifier.fillMaxWidth()) { Text("REVALIDATE") }
                 message?.let { Text(it, color = MaterialTheme.colorScheme.error) }
             }
@@ -169,7 +163,7 @@ fun ProductionCatalogingScreenV2(initial: CatalogRecord? = null, onStartNewBook:
                     val n = Aacr2Normalizer.normalize(record)
                     record = n.record
                     message = n.issues.joinToString("\n") { it.message }.takeIf(String::isNotBlank)
-                    if (n.valid && record.ddc != null && ddcVerified && location.isNotBlank() && source.isNotBlank() &&
+                    if (n.valid && record.ddc != null && location.isNotBlank() && source.isNotBlank() &&
                         (source != "Donation" || donorDetails.isNotBlank()) && purchasePrice.isNotBlank()) {
                         drafts = CopyDraftFactory(BarcodeSequence(context)).create(
                             record, copies, location, source, itemType, parsePurchasePrice(purchasePrice),
@@ -178,7 +172,7 @@ fun ProductionCatalogingScreenV2(initial: CatalogRecord? = null, onStartNewBook:
                         approved = false
                         step = 4
                     }
-                }, enabled = location.isNotBlank() && source.isNotBlank() && record.ddc != null && ddcVerified && purchasePrice.isNotBlank(), modifier = Modifier.fillMaxWidth()) {
+                }, enabled = location.isNotBlank() && source.isNotBlank() && record.ddc != null && purchasePrice.isNotBlank(), modifier = Modifier.fillMaxWidth()) {
                     Text("FINAL REVIEW")
                 }
                 message?.let { Text(it, color = MaterialTheme.colorScheme.error) }
