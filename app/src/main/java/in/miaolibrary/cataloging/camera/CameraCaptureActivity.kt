@@ -2,6 +2,7 @@ package in.miaolibrary.cataloging.camera
 
 import android.Manifest
 import android.content.pm.PackageManager
+import android.content.ContentValues
 import android.net.Uri
 import android.os.Bundle
 import android.provider.MediaStore
