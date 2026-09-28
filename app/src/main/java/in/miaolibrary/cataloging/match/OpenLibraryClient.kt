@@ -1,6 +1,7 @@
 package in.miaolibrary.cataloging.match
 
 import in.miaolibrary.cataloging.model.DdcCandidate
+import in.miaolibrary.cataloging.model.ExternalIdentityCandidate
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.*
@@ -23,11 +24,47 @@ class OpenLibraryClient(private val http: OkHttpClient = OkHttpClient()) {
         }.getOrNull()
     }
 
+    suspend fun findIdentityMatches(isbn: String?, title: String?, author: String?): List<ExternalIdentityCandidate> = withContext(Dispatchers.IO) {
+        val result = lookup(isbn, title, author) ?: return@withContext emptyList()
+        val docs = result["docs"]?.jsonArray ?: return@withContext emptyList()
+        docs.mapNotNull { element ->
+            val doc = element.jsonObject
+            val candidateTitle = doc["title"]?.jsonPrimitive?.contentOrNull
+            val candidateAuthor = doc["author_name"]?.jsonArray?.firstOrNull()?.jsonPrimitive?.contentOrNull
+            val candidateIsbn = doc["isbn"]?.jsonArray?.firstOrNull()?.jsonPrimitive?.contentOrNull
+            val score = identityScore(isbn, title, author, candidateIsbn, candidateTitle, candidateAuthor)
+            if (score < 0.70) null else ExternalIdentityCandidate(
+                candidateTitle, candidateAuthor, candidateIsbn,
+                "Open Library", doc["key"]?.jsonPrimitive?.contentOrNull?.let { "https://openlibrary.org$it" }, score
+            )
+        }.sortedByDescending { it.confidence }.take(5)
+    }
+
     suspend fun findVerifiedDdc(isbn: String?, title: String?, author: String?): List<DdcCandidate> = withContext(Dispatchers.IO) {
         val result = lookup(isbn, title, author) ?: return@withContext emptyList()
         val docs = result["docs"]?.jsonArray ?: return@withContext emptyList()
-        val lccns = docs.flatMap { element -> element.jsonObject["lccn"]?.jsonArray?.mapNotNull { it.jsonPrimitive.contentOrNull }.orEmpty() }.distinct().take(10)
+        val lccns = docs.filter { d ->
+            val o = d.jsonObject
+            identityScore(isbn, title, author, o["isbn"]?.jsonArray?.firstOrNull()?.jsonPrimitive?.contentOrNull, o["title"]?.jsonPrimitive?.contentOrNull, o["author_name"]?.jsonArray?.firstOrNull()?.jsonPrimitive?.contentOrNull) >= 0.70
+        }.flatMap { element -> element.jsonObject["lccn"]?.jsonArray?.mapNotNull { it.jsonPrimitive.contentOrNull }.orEmpty() }.distinct().take(10)
         lccns.mapNotNull { fetchLocDdc(it) }
+    }
+
+    private fun identityScore(isbn:String?, title:String?, author:String?, candidateIsbn:String?, candidateTitle:String?, candidateAuthor:String?): Double {
+        val aIsbn = isbn?.filter(Char::isDigit)
+        val bIsbn = candidateIsbn?.filter(Char::isDigit)
+        if (!aIsbn.isNullOrBlank() && aIsbn == bIsbn) return 1.0
+        fun norm(s:String?) = s.orEmpty().lowercase().replace(Regex("[^a-z0-9\\s]"), " ").replace(Regex("\\s+"), " ").trim()
+        val t = norm(title)
+        val ct = norm(candidateTitle)
+        val aw = norm(author).split(" ").filter(String::isNotBlank).toSet()
+        val caw = norm(candidateAuthor).split(" ").filter(String::isNotBlank).toSet()
+        val titleScore = if (t.isNotBlank() && ct.isNotBlank()) {
+            val common = t.split(" ").intersect(ct.split(" ").toSet()).size.toDouble()
+            common / maxOf(t.split(" ").size, ct.split(" ").size)
+        } else 0.0
+        val authorScore = if (aw.isNotEmpty() && caw.isNotEmpty()) aw.intersect(caw).size.toDouble() / maxOf(aw.size, caw.size) else 0.0
+        return titleScore * 0.7 + authorScore * 0.3
     }
 
     private fun fetchLocDdc(lccn: String): DdcCandidate? = runCatching {
