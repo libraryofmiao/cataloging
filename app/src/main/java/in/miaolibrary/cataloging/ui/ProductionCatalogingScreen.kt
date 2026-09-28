@@ -33,13 +33,18 @@ fun ProductionCatalogingScreen(initial: CatalogRecord? = null, onSubmit: (Catalo
 
     Column(
         Modifier.fillMaxSize()
-            .windowInsetsPadding(WindowInsets.navigationBars)
+            .safeDrawingPadding()
             .verticalScroll(rememberScrollState())
-            .padding(16.dp),
+            .padding(horizontal = 16.dp, vertical = 12.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
-        Text("Miao Library Cataloging", style = MaterialTheme.typography.headlineSmall)
-        Text("SDLM | AACR2 + MARC21 + DDC 23 + LCSH")
+        Card(modifier = Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer)) {
+            Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                Text("SDLM Cataloguing", style = MaterialTheme.typography.headlineSmall)
+                Text("AACR2 • MARC21 • DDC 23 • LCSH", style = MaterialTheme.typography.bodyMedium)
+                Text("Evidence first • Human approval before Koha", style = MaterialTheme.typography.bodySmall)
+            }
+        }
         LinearProgressIndicator(
             progress = { ((step + 1) / 5f).coerceIn(0f, 1f) },
             modifier = Modifier.fillMaxWidth()
@@ -136,19 +141,19 @@ fun ProductionCatalogingScreen(initial: CatalogRecord? = null, onSubmit: (Catalo
             3 -> {
                 Text("4. Copies", style = MaterialTheme.typography.titleLarge)
                 Text("One bibliographic record, separate Koha item for each physical copy.")
-                Text("Location")
+                Text("Location", style = MaterialTheme.typography.titleMedium)
                 LOCATIONS.forEach { value ->
                     OutlinedButton(onClick = { location = value; prefs.edit().putString("location", value).apply() }, modifier = Modifier.fillMaxWidth()) {
                         Text(if (location == value) "Selected: $value" else value)
                     }
                 }
-                Text("Acquisition source")
+                Text("Acquisition source", style = MaterialTheme.typography.titleMedium)
                 SOURCES.forEach { value ->
                     OutlinedButton(onClick = { source = value; prefs.edit().putString("acquisition_source", value).apply() }, modifier = Modifier.fillMaxWidth()) {
                         Text(if (source == value) "Selected: $value" else value)
                     }
                 }
-                Text("Item type")
+                Text("Item type", style = MaterialTheme.typography.titleMedium)
                 TYPES.forEach { value ->
                     OutlinedButton(onClick = { type = value }, modifier = Modifier.fillMaxWidth()) {
                         Text(if (type == value) "Selected: $value" else value)
