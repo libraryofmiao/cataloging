@@ -39,7 +39,7 @@ fun ProductionCatalogingScreenV2(initial: CatalogRecord? = null, onStartNewBook:
     var source by remember { mutableStateOf(prefs.getString("acquisition_source", "") ?: "") }
     var itemType by remember { mutableStateOf("BOOKS") }
     var copies by remember { mutableIntStateOf(1) }
-    var purchasePrice by remember { mutableStateOf(initial?.printedPrices?.firstOrNull().orEmpty()) }
+    var purchasePrice by remember { mutableStateOf("") }
     var donorDetails by remember { mutableStateOf("") }
     var ddcVerified by remember { mutableStateOf(initial?.ddcEdition == "23") }
     var subjectsVerified by remember { mutableStateOf(initial?.subjects?.isEmpty() != false) }
