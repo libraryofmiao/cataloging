@@ -41,15 +41,39 @@ class BookExtractionCoordinator(
         )
 
         val candidates = runCatching {
-            (ddcSources.find(isbn, base.titleProper, r.author) + locDdc.find(isbn, base.titleProper, r.author) + openLibrary.findVerifiedDdc(isbn, base.titleProper, r.author))
-                .distinctBy { "${it.number}|${it.edition}|${it.source}" }
+            kotlinx.coroutines.coroutineScope {
+                val a = kotlinx.coroutines.async { ddcSources.find(isbn, base.titleProper, r.author) }
+                val b = kotlinx.coroutines.async { locDdc.find(isbn, base.titleProper, r.author) }
+                val c = kotlinx.coroutines.async { openLibrary.findVerifiedDdc(isbn, base.titleProper, r.author) }
+                (a.await() + b.await() + c.await()).distinctBy { it.number + "|" + it.edition + "|" + it.source }
+            }
         }.getOrDefault(emptyList())
 
         val verified = DdcMatcher.choose(candidates.filter { it.edition == "23" })
+        val evidenceFields = mutableMapOf<String, List<EvidenceValue>>()
+        fun addEvidence(field: String, value: String?) {
+            if (!value.isNullOrBlank()) {
+                evidenceFields[field] = listOf(EvidenceValue(value, EvidenceSource.PHYSICAL, 0.90, true))
+            }
+        }
+        addEvidence("245$a", r.title)
+        addEvidence("245$c", r.author)
+        addEvidence("264$a", r.publicationPlace)
+        addEvidence("264$b", r.publisher)
+        addEvidence("264$c", r.publicationDate)
+        addEvidence("020$a", r.isbn)
+        addEvidence("020$c", r.printedPrice)
+
+        val evidence = BookEvidence(
+            photos = state.photos.values.toList(),
+            fields = evidenceFields,
+            ddcCandidates = candidates
+        )
+        val withEvidence = base.copy(evidence = evidence)
         return if (verified != null) {
-            base.copy(ddc = verified.number, ddcEdition = "23")
+            withEvidence.copy(ddc = verified.number, ddcEdition = "23")
         } else {
-            base
+            withEvidence
         }
     }
 
