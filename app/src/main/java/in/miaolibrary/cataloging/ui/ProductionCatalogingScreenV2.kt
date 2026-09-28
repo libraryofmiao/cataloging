@@ -188,7 +188,19 @@ fun ProductionCatalogingScreenV2(initial: CatalogRecord? = null) {
                     val rendered = if (field.subfields.isNotEmpty()) field.subfields.joinToString(" ") { sf -> "$" + sf.first + " " + sf.second } else field.value.orEmpty()
                     Text(field.tag + " " + field.ind1 + field.ind2 + " " + rendered, style = MaterialTheme.typography.bodySmall)
                 }
-                drafts.forEach { Text("Copy " + it.copyNumber + ": barcode " + it.barcode) }
+                drafts.forEachIndexed { index, draft ->
+                    Text("Copy " + draft.copyNumber + " • barcode " + draft.barcode, style = MaterialTheme.typography.titleMedium)
+                    ChoiceMenu("Location", draft.location, LOCATIONS) { value ->
+                        drafts = drafts.toMutableList().also { list -> list[index] = draft.copy(location = value) }
+                    }
+                    ChoiceMenu("Acquisition source", draft.acquisitionSource, SOURCES) { value ->
+                        drafts = drafts.toMutableList().also { list -> list[index] = draft.copy(acquisitionSource = value) }
+                    }
+                    ChoiceMenu("Item type", draft.itemType, TYPES) { value ->
+                        drafts = drafts.toMutableList().also { list -> list[index] = draft.copy(itemType = value) }
+                    }
+                    if (index < drafts.lastIndex) HorizontalDivider()
+                }
                 HorizontalDivider()
                 FieldV2("Koha API token", token, true) {
                     token = it
@@ -222,6 +234,31 @@ fun ProductionCatalogingScreenV2(initial: CatalogRecord? = null) {
                     }
                 }, enabled = approved && token.isNotBlank() && !busy && drafts.isNotEmpty(), modifier = Modifier.fillMaxWidth()) {
                     Text(if (biblioId == null) "CREATE IN KOHA" else "RETRY REMAINING ITEMS")
+                }
+            }
+        }
+    }
+}
+
+
+@Composable
+private fun ChoiceMenu(label: String, value: String, options: List<String>, onSelect: (String) -> Unit) {
+    var expanded by remember(value) { mutableStateOf(false) }
+    Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+        Text(label, style = MaterialTheme.typography.labelLarge)
+        Box {
+            OutlinedButton(onClick = { expanded = true }, modifier = Modifier.fillMaxWidth()) {
+                Text(value)
+            }
+            DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
+                options.forEach { option ->
+                    DropdownMenuItem(
+                        text = { Text(option) },
+                        onClick = {
+                            expanded = false
+                            onSelect(option)
+                        }
+                    )
                 }
             }
         }
