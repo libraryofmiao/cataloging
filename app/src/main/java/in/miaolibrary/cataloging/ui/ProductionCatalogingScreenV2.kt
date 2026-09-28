@@ -171,7 +171,7 @@ fun ProductionCatalogingScreenV2(initial: CatalogRecord? = null) {
                 Field("Koha API token", token, {
                     token = it
                     tokenStore.save(it)
-                }
+                }, password = true)
                 Text("The API token is encrypted with Android Keystore and is not displayed after leaving this screen.", style = MaterialTheme.typography.bodySmall)
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Checkbox(approved, { approved = it })
