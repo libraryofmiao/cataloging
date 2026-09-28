@@ -114,6 +114,8 @@ class GeminiVisionEngine(
         )
     }
 
+    private class GeminiRequestException(val code: Int, message: String) : IllegalStateException(message)
+
     companion object {
         private const val EXTRACTION_PROMPT = """
 You are the bibliographic cataloguing vision model for a library. Examine ALL supplied photographs together.
