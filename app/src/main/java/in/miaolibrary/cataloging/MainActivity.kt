@@ -19,6 +19,7 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
+            val photoPrefs = remember { getSharedPreferences("cataloging_photos", MODE_PRIVATE) }
             MaterialTheme(colorScheme = lightColorScheme(
                 primary = androidx.compose.ui.graphics.Color(0xFF2457D6),
                 secondary = androidx.compose.ui.graphics.Color(0xFF5A6072),
@@ -26,14 +27,14 @@ class MainActivity : ComponentActivity() {
                 surfaceContainer = androidx.compose.ui.graphics.Color(0xFFEFF1F8)
             )) {
                 Surface(Modifier.fillMaxSize()) {
-                    var capture by remember { mutableStateOf(PhotoCaptureState()) }
+                    var capture by remember { mutableStateOf(PhotoCaptureState.restore(photoPrefs)) }
                     var camera by remember { mutableStateOf(true) }
                     var extracting by remember { mutableStateOf(false) }
                     var record by remember { mutableStateOf<CatalogRecord?>(null) }
                     var error by remember { mutableStateOf<String?>(null) }
                     when {
                         camera -> CameraCaptureScreen(capture,
-                            { type, path -> capture = capture.add(type, path) },
+                            { type, path -> capture = capture.add(type, path).also { it.saveTo(photoPrefs) } },
                             { camera = false; extracting = true })
                         extracting -> {
                             LaunchedEffect(capture) {
@@ -56,7 +57,7 @@ class MainActivity : ComponentActivity() {
                         ) {
                             Text("Could not read the photographs", style = MaterialTheme.typography.headlineSmall)
                             Text(error!!)
-                            Button(onClick = { error = null; camera = true; capture = PhotoCaptureState() }, Modifier.fillMaxWidth()) { Text("CAPTURE AGAIN") }
+                            Button(onClick = { error = null; camera = true; extracting = false }, Modifier.fillMaxWidth()) { Text("CAPTURE AGAIN") }
                         }
                         else -> ProductionCatalogingScreenV2(initial = record)
                     }
