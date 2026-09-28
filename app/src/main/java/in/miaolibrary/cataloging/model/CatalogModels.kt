@@ -15,6 +15,6 @@ enum class EvidenceSource { PHYSICAL, EXTERNAL_CATALOGUE, PUBLISHER, AI_INFERENC
  val languages:List<Language> = emptyList(),val isbns:List<String> = emptyList(),val printedPrices:List<String> = emptyList(),
  val series:String?=null,val notes:List<String> = emptyList(),val bibliographyNote:String?=null,val contents:String?=null,val summary:String?=null,
  val subjects:List<String> = emptyList(),val ddc:String?=null,val ddcEdition:String?=null,val callNumber:String?=null,
- val itemType:String="BOOKS")
+ val itemType:String="BOOKS",val evidence:BookEvidence?=null)
 @Serializable data class BookEvidence(val photos:List<String> = emptyList(),val fields:Map<String,List<EvidenceValue>> = emptyMap(),val ddcCandidates:List<DdcCandidate> = emptyList())
 data class CopyDraft(val barcode:String,val homeLibrary:String="SDLM",val holdingLibrary:String="SDLM",val location:String,val itemType:String="BOOKS",val callNumber:String,val acquisitionDate:String,val acquisitionSource:String,val purchasePrice:Double?=null,val donorDetails:String?=null,val copyNumber:String="1")
