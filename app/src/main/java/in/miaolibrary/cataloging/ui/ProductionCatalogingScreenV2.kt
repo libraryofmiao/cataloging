@@ -42,6 +42,7 @@ fun ProductionCatalogingScreenV2(initial: CatalogRecord? = null) {
     var purchasePrice by remember { mutableStateOf("") }
     var donorDetails by remember { mutableStateOf("") }
     var ddcVerified by remember { mutableStateOf(initial?.ddcEdition == "23") }
+    var subjectsVerified by remember { mutableStateOf(initial?.subjects?.isEmpty() != false) }
     var token by remember { mutableStateOf(tokenStore.get().orEmpty()) }
     var approved by remember { mutableStateOf(false) }
     var busy by remember { mutableStateOf(false) }
@@ -108,12 +109,21 @@ fun ProductionCatalogingScreenV2(initial: CatalogRecord? = null) {
                     Text("DDC 23 evidence sources:", style = MaterialTheme.typography.titleMedium)
                     ddcSources.take(5).forEach { Text(it.number + " — " + it.source) }
                 } else Text("No verified DDC 23 candidate was found.")
-                FieldV2("Subjects (LCSH)", record.subjects.joinToString("; ")) { record = record.copy(subjects = it.split(";").map(String::trim).filter(String::isNotBlank)) }
+                FieldV2("Subjects (LCSH — librarian validated)", record.subjects.joinToString("; ")) {
+                    record = record.copy(subjects = it.split(";").map(String::trim).filter(String::isNotBlank))
+                    subjectsVerified = it.split(";").map(String::trim).any(String::isNotBlank).not()
+                }
+                if (record.subjects.isNotEmpty()) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Checkbox(subjectsVerified, { subjectsVerified = it })
+                        Text("I verified these as valid Library of Congress Subject Headings.")
+                    }
+                }
                 Button({
                     val n = Aacr2Normalizer.normalize(record)
                     record = n.record
                     message = n.issues.joinToString("\n") { it.message }.takeIf(String::isNotBlank)
-                    if (n.valid && record.ddc != null && ddcVerified) step = 3
+                    if (n.valid && record.ddc != null && ddcVerified && subjectsVerified) step = 3
                 }, Modifier.fillMaxWidth()) { Text("REVALIDATE") }
                 message?.let { Text(it, color = MaterialTheme.colorScheme.error) }
             }
