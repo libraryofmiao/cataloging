@@ -1,4 +1,4 @@
-package in.miaolibrary.cataloging.barcode
+package `in`.miaolibrary.cataloging.barcode
 
 import android.content.Context
 
