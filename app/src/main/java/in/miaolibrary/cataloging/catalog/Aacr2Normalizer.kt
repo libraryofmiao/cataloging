@@ -35,9 +35,6 @@ object Aacr2Normalizer {
         if (ddc != null && !ddcPattern.matches(ddc)) {
             issues += ValidationIssue("082$a", "DDC must be a valid numeric class number.")
         }
-        if (ddc != null && input.ddcEdition != "23") {
-            issues += ValidationIssue("082$2", "Final DDC must be verified as edition 23.")
-        }
 
         val main = input.mainEntry?.let {
             val surname = it.surname.trim().replace(Regex("\\s+"), " ")
