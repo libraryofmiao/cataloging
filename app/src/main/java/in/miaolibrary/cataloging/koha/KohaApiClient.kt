@@ -31,6 +31,28 @@ class KohaApiClient(
         }
     }
 
+    fun barcodeExists(barcode: String): Boolean {
+        val token = tokenProvider() ?: error("Koha API token is not configured")
+        val url = okhttp3.HttpUrl.Builder()
+            .scheme(java.net.URI(baseUrl).scheme)
+            .host(java.net.URI(baseUrl).host)
+            .port(java.net.URI(baseUrl).port.takeIf { it > 0 } ?: 80)
+            .addPathSegments(java.net.URI(baseUrl).path.trimStart('/'))
+            .addPathSegment("items")
+            .addQueryParameter("external_id", barcode)
+            .addQueryParameter("_match", "exact")
+            .addQueryParameter("_per_page", "1")
+            .build()
+        val req = Request.Builder().url(url)
+            .get().header("Authorization", "Bearer " + token).build()
+        client.newCall(req).execute().use { response ->
+            val body = response.body?.string().orEmpty()
+            if (!response.isSuccessful) error("Koha barcode check failed: HTTP " + response.code + ": " + body)
+            val json = runCatching { Json.parseToJsonElement(body).jsonArray }.getOrNull()
+            return !json.isNullOrEmpty()
+        }
+    }
+
     fun createItem(biblioId: String, c: CopyDraft): String {
         val token = tokenProvider() ?: error("Koha API token is not configured")
         val body = buildJsonObject {
