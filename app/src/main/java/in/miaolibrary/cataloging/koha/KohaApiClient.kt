@@ -9,7 +9,7 @@ import okhttp3.RequestBody.Companion.toRequestBody
 import java.util.concurrent.TimeUnit
 
 class KohaApiClient(
-    private val baseUrl: String = "http://92.4.70.3:8080/api/v1",
+    private val baseUrl: String = "https://staff.miaolibrary.in/api/v1",
     private val tokenProvider: () -> String?
 ) {
     private val client = OkHttpClient.Builder()
