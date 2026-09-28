@@ -65,33 +65,33 @@ fun ProductionCatalogingScreenV2(initial: CatalogRecord? = null) {
             }
             1 -> {
                 Text("2. Review extracted bibliographic data", style = MaterialTheme.typography.titleLarge)
-                Field("Title proper", record.titleProper) { record = record.copy(titleProper = it) }
-                Field("Other title information", record.otherTitleInformation.orEmpty()) { record = record.copy(otherTitleInformation = it.ifBlank { null }) }
-                Field("Author / statement of responsibility", record.statementOfResponsibility.orEmpty()) {
+                FieldV2("Title proper", record.titleProper) { record = record.copy(titleProper = it) }
+                FieldV2("Other title information", record.otherTitleInformation.orEmpty()) { record = record.copy(otherTitleInformation = it.ifBlank { null }) }
+                FieldV2("Author / statement of responsibility", record.statementOfResponsibility.orEmpty()) {
                     record = record.copy(statementOfResponsibility = it, mainEntry = parsePerson(it))
                 }
-                Field("Edition statement", record.editionStatement.orEmpty()) { record = record.copy(editionStatement = it.ifBlank { null }) }
-                Field("Publication place", record.publication.place.orEmpty()) { record = record.copy(publication = record.publication.copy(place = it.ifBlank { null })) }
-                Field("Publisher", record.publication.publisher.orEmpty()) { record = record.copy(publication = record.publication.copy(publisher = it.ifBlank { null })) }
-                Field("Publication date", record.publication.date.orEmpty()) { record = record.copy(publication = record.publication.copy(date = it.ifBlank { null })) }
-                Field("Preliminary pages", record.physicalDescription.preliminaryPages.orEmpty()) { record = record.copy(physicalDescription = record.physicalDescription.copy(preliminaryPages = it.ifBlank { null })) }
-                Field("Main pagination", record.physicalDescription.mainPages.orEmpty()) { record = record.copy(physicalDescription = record.physicalDescription.copy(mainPages = it.ifBlank { null })) }
-                Field("Illustrations", record.physicalDescription.illustrations.joinToString("; ")) { record = record.copy(physicalDescription = record.physicalDescription.copy(illustrations = it.split(";").map(String::trim).filter(String::isNotBlank))) }
-                Field("Dimensions", record.physicalDescription.dimensions.orEmpty()) { record = record.copy(physicalDescription = record.physicalDescription.copy(dimensions = it.ifBlank { null })) }
-                Field("ISBN", record.isbns.firstOrNull().orEmpty()) { record = record.copy(isbns = it.split(",").map(String::trim).filter(String::isNotBlank)) }
-                Field("Printed price", record.printedPrices.joinToString(", ")) { record = record.copy(printedPrices = it.split(",").map(String::trim).filter(String::isNotBlank)) }
-                Field("Language", record.languages.firstOrNull()?.name.orEmpty()) { record = record.copy(languages = if (it.isBlank()) emptyList() else listOf(Language(it, languageCode(it)))) }
-                Field("Series", record.series.orEmpty()) { record = record.copy(series = it.ifBlank { null }) }
-                Field("Contents", record.contents.orEmpty()) { record = record.copy(contents = it.ifBlank { null }) }
-                Field("Summary", record.summary.orEmpty()) { record = record.copy(summary = it.ifBlank { null }) }
-                Field("Notes / warnings", record.notes.joinToString("; ")) { record = record.copy(notes = it.split(";").map(String::trim).filter(String::isNotBlank)) }
+                FieldV2("Edition statement", record.editionStatement.orEmpty()) { record = record.copy(editionStatement = it.ifBlank { null }) }
+                FieldV2("Publication place", record.publication.place.orEmpty()) { record = record.copy(publication = record.publication.copy(place = it.ifBlank { null })) }
+                FieldV2("Publisher", record.publication.publisher.orEmpty()) { record = record.copy(publication = record.publication.copy(publisher = it.ifBlank { null })) }
+                FieldV2("Publication date", record.publication.date.orEmpty()) { record = record.copy(publication = record.publication.copy(date = it.ifBlank { null })) }
+                FieldV2("Preliminary pages", record.physicalDescription.preliminaryPages.orEmpty()) { record = record.copy(physicalDescription = record.physicalDescription.copy(preliminaryPages = it.ifBlank { null })) }
+                FieldV2("Main pagination", record.physicalDescription.mainPages.orEmpty()) { record = record.copy(physicalDescription = record.physicalDescription.copy(mainPages = it.ifBlank { null })) }
+                FieldV2("Illustrations", record.physicalDescription.illustrations.joinToString("; ")) { record = record.copy(physicalDescription = record.physicalDescription.copy(illustrations = it.split(";").map(String::trim).filter(String::isNotBlank))) }
+                FieldV2("Dimensions", record.physicalDescription.dimensions.orEmpty()) { record = record.copy(physicalDescription = record.physicalDescription.copy(dimensions = it.ifBlank { null })) }
+                FieldV2("ISBN", record.isbns.firstOrNull().orEmpty()) { record = record.copy(isbns = it.split(",").map(String::trim).filter(String::isNotBlank)) }
+                FieldV2("Printed price", record.printedPrices.joinToString(", ")) { record = record.copy(printedPrices = it.split(",").map(String::trim).filter(String::isNotBlank)) }
+                FieldV2("Language", record.languages.firstOrNull()?.name.orEmpty()) { record = record.copy(languages = if (it.isBlank()) emptyList() else listOf(Language(it, languageCode(it)))) }
+                FieldV2("Series", record.series.orEmpty()) { record = record.copy(series = it.ifBlank { null }) }
+                FieldV2("Contents", record.contents.orEmpty()) { record = record.copy(contents = it.ifBlank { null }) }
+                FieldV2("Summary", record.summary.orEmpty()) { record = record.copy(summary = it.ifBlank { null }) }
+                FieldV2("Notes / warnings", record.notes.joinToString("; ")) { record = record.copy(notes = it.split(";").map(String::trim).filter(String::isNotBlank)) }
                 Button({ step = 2 }, Modifier.fillMaxWidth()) { Text("CONTINUE TO DDC") }
             }
             2 -> {
                 Text("3. AACR2 / DDC validation", style = MaterialTheme.typography.titleLarge)
-                Field("Author surname", record.mainEntry?.surname.orEmpty()) { record = record.copy(mainEntry = Person(it, record.mainEntry?.forename)) }
-                Field("Author forename", record.mainEntry?.forename.orEmpty()) { record = record.copy(mainEntry = Person(record.mainEntry?.surname.orEmpty(), it.ifBlank { null })) }
-                Field("DDC 082 a", record.ddc.orEmpty()) {
+                FieldV2("Author surname", record.mainEntry?.surname.orEmpty()) { record = record.copy(mainEntry = Person(it, record.mainEntry?.forename)) }
+                FieldV2("Author forename", record.mainEntry?.forename.orEmpty()) { record = record.copy(mainEntry = Person(record.mainEntry?.surname.orEmpty(), it.ifBlank { null })) }
+                FieldV2("DDC 082 a", record.ddc.orEmpty()) {
                     record = record.copy(ddc = it.ifBlank { null }, ddcEdition = null, callNumber = null)
                     ddcVerified = false
                 }
@@ -101,7 +101,7 @@ fun ProductionCatalogingScreenV2(initial: CatalogRecord? = null) {
                     Text("I verified the DDC number against a DDC 23 source.")
                 }
                 Text("Call number: " + (record.callNumber ?: "Will be generated after validation"))
-                Field("Subjects (LCSH)", record.subjects.joinToString("; ")) { record = record.copy(subjects = it.split(";").map(String::trim).filter(String::isNotBlank)) }
+                FieldV2("Subjects (LCSH)", record.subjects.joinToString("; ")) { record = record.copy(subjects = it.split(";").map(String::trim).filter(String::isNotBlank)) }
                 Button({
                     val n = Aacr2Normalizer.normalize(record)
                     record = n.record
@@ -136,8 +136,8 @@ fun ProductionCatalogingScreenV2(initial: CatalogRecord? = null) {
                     Text(copies.toString() + " copies", Modifier.padding(16.dp))
                     Button({ copies = (copies + 1).coerceAtMost(999) }) { Text("+") }
                 }
-                Field("Purchase price (optional)", purchasePrice) { purchasePrice = it }
-                if (source == "Donation") Field("Donor details", donorDetails) { donorDetails = it }
+                FieldV2("Purchase price (optional)", purchasePrice) { purchasePrice = it }
+                if (source == "Donation") FieldV2("Donor details", donorDetails) { donorDetails = it }
                 Button({
                     val n = Aacr2Normalizer.normalize(record)
                     record = n.record
@@ -168,7 +168,7 @@ fun ProductionCatalogingScreenV2(initial: CatalogRecord? = null) {
                 Text("Location: " + location + " • Source: " + source + " • Type: " + itemType)
                 drafts.forEach { Text("Copy " + it.copyNumber + ": barcode " + it.barcode) }
                 HorizontalDivider()
-                Field("Koha API token", token, {
+                FieldV2("Koha API token", token, {
                     token = it
                     tokenStore.save(it)
                 }, password = true)
@@ -207,8 +207,8 @@ fun ProductionCatalogingScreenV2(initial: CatalogRecord? = null) {
 }
 
 @Composable
-private fun Field(label: String, value: String, onValueChange: (String) -> Unit, password: Boolean = false) {
-    OutlinedTextField(
+private fun FieldV2(label: String, value: String, onValueChange: (String) -> Unit, password: Boolean = false) {
+    OutlinedTextFieldV2(
         value = value, onValueChange = onValueChange, label = { Text(label) }, modifier = Modifier.fillMaxWidth(),
         visualTransformation = if (password) PasswordVisualTransformation() else androidx.compose.ui.text.input.VisualTransformation.None
     )
