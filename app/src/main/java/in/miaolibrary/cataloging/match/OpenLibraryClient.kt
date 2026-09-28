@@ -47,8 +47,23 @@ class OpenLibraryClient(private val http: OkHttpClient = OkHttpClient()) {
 
 object DdcMatcher {
     fun choose(candidates: List<DdcCandidate>, physicalDdc: String? = null): DdcCandidate? {
-        if (candidates.isEmpty()) return null
+        val verified = candidates.filter { it.edition == "23" && it.number.isNotBlank() }
+        if (verified.isEmpty()) return null
         val normalized = physicalDdc?.trim()
-        return candidates.sortedWith(compareByDescending<DdcCandidate> { it.number == normalized }.thenByDescending { it.edition == "23" }.thenByDescending { it.confidence }).first()
+        fun priority(source: String): Int = when {
+            source.contains("Tezu", true) -> 6
+            source.contains("State Central Library", true) -> 5
+            source.contains("Pasighat", true) -> 4
+            source.contains("Library of Congress", true) -> 3
+            source.contains("Open Library", true) -> 2
+            else -> 1
+        }
+        return verified
+            .sortedWith(
+                compareByDescending<DdcCandidate> { it.number == normalized }
+                    .thenByDescending { priority(it.source) }
+                    .thenByDescending { it.confidence }
+            )
+            .first()
     }
 }
