@@ -12,7 +12,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import `in`.miaolibrary.cataloging.capture.*
 import `in`.miaolibrary.cataloging.model.CatalogRecord
-import `in`.miaolibrary.cataloging.ui.ProductionCatalogingScreen
+import `in`.miaolibrary.cataloging.ui.ProductionCatalogingScreenV2
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -58,7 +58,7 @@ class MainActivity : ComponentActivity() {
                             Text(error!!)
                             Button(onClick = { error = null; camera = true; capture = PhotoCaptureState() }, Modifier.fillMaxWidth()) { Text("CAPTURE AGAIN") }
                         }
-                        else -> ProductionCatalogingScreen(initial = record)
+                        else -> ProductionCatalogingScreenV2(initial = record)
                     }
                 }
             }
