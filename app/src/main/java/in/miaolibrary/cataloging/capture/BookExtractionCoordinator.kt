@@ -8,7 +8,8 @@ import `in`.miaolibrary.cataloging.model.*
 class BookExtractionCoordinator(
     private val vision: VisionEngine,
     private val ddcSources: DdcSourceClient = DdcSourceClient(),
-    private val locDdc: LibraryOfCongressDdcClient = LibraryOfCongressDdcClient()
+    private val locDdc: LibraryOfCongressDdcClient = LibraryOfCongressDdcClient(),
+    private val openLibrary: OpenLibraryClient = OpenLibraryClient()
 ) {
     suspend fun extract(state: PhotoCaptureState): CatalogRecord {
         check(state.isComplete()) { "All four required photographs are required" }
@@ -39,7 +40,7 @@ class BookExtractionCoordinator(
         )
 
         val candidates = runCatching {
-            (ddcSources.find(isbn, base.titleProper, r.author) + locDdc.find(isbn, base.titleProper, r.author))
+            (ddcSources.find(isbn, base.titleProper, r.author) + locDdc.find(isbn, base.titleProper, r.author) + openLibrary.findVerifiedDdc(isbn, base.titleProper, r.author))
                 .distinctBy { "${it.number}|${it.edition}|${it.source}" }
         }.getOrDefault(emptyList())
 
