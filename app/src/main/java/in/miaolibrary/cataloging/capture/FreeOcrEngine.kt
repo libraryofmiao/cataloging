@@ -1,12 +1,11 @@
 package in.miaolibrary.cataloging.capture
 
-import android.net.Uri
+import android.graphics.BitmapFactory
 import com.google.mlkit.vision.common.InputImage
 import com.google.mlkit.vision.text.TextRecognition
 import com.google.mlkit.vision.text.latin.TextRecognizerOptions
 import com.google.mlkit.vision.text.devanagari.DevanagariTextRecognizerOptions
 import kotlinx.coroutines.tasks.await
-import java.io.File
 
 data class OcrPage(val path:String,val text:String)
 
@@ -16,9 +15,11 @@ class FreeOcrEngine {
 
  suspend fun read(paths:List<String>):List<OcrPage>{
   return paths.map{path->
-   val image=InputImage.fromFilePath(androidx.core.net.toUri(File(path)))
+   val bitmap=BitmapFactory.decodeFile(path) ?: return@map OcrPage(path,"")
+   val image=InputImage.fromBitmap(bitmap,0)
    val a=runCatching{latin.process(image).await().text}.getOrDefault("")
    val b=runCatching{devanagari.process(image).await().text}.getOrDefault("")
+   bitmap.recycle()
    OcrPage(path,merge(a,b))
   }
  }
