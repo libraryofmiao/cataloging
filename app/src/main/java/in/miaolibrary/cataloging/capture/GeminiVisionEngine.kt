@@ -38,7 +38,6 @@ class GeminiVisionEngine(
 
     override suspend fun extract(photoPaths: List<String>): ExtractedBook = withContext(Dispatchers.IO) {
         val apiKey = getApiKey()
-    override suspend fun extract(photoPaths: List<String>): ExtractedBook = withContext(Dispatchers.IO) {
         require(apiKey.isNotBlank()) { "Gemini API key is not configured. Enter your Gemini API key." }
         require(photoPaths.isNotEmpty()) { "No photographs were supplied" }
 
