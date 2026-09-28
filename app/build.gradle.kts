@@ -16,7 +16,15 @@ android {
  buildFeatures { compose=true; buildConfig=true }
  namespace="in.miaolibrary.cataloging"
  compileSdk=35
- defaultConfig { applicationId="in.miaolibrary.cataloging"; minSdk=26; targetSdk=35; versionCode=1; versionName="1.0" }
+ defaultConfig {
+  applicationId="in.miaolibrary.cataloging"
+  minSdk=26
+  targetSdk=35
+  versionCode=1
+  versionName="1.0"
+  val geminiKey = providers.environmentVariable("GEMINI_API_KEY").orElse(providers.gradleProperty("GEMINI_API_KEY")).orElse("")
+  buildConfigField("String", "GEMINI_API_KEY", "\\"$geminiKey\\")
+ }
  compileOptions { sourceCompatibility=JavaVersion.VERSION_17; targetCompatibility=JavaVersion.VERSION_17 }
  kotlinOptions { jvmTarget="17" }
 
