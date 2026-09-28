@@ -31,14 +31,15 @@ class DdcSourceClient {
     private fun searchSource(source: Source, q: String): List<DdcCandidate> = runCatching {
         val all = mutableListOf<DdcCandidate>()
         for (offset in listOf(0, 20, 40)) {
-            val url = "\${source.base}/cgi-bin/koha/opac-search.pl?idx=&q=\${URLEncoder.encode(q, "UTF-8")}&count=20&offset=\${offset}"
+            val encoded = URLEncoder.encode(q, "UTF-8")
+            val url = "\${source.base}/cgi-bin/koha/opac-search.pl?idx=&q=\$encoded&count=20&offset=\$offset"
             val html = http.newCall(Request.Builder().url(url).header("Accept", "text/html").build()).execute().use {
                 if (it.isSuccessful) it.body?.string().orEmpty() else ""
             }
             if (html.isBlank()) break
             val page = Jsoup.parse(html).select("a[href*='opac-detail.pl']").take(20).mapNotNull { a ->
                 val href = a.attr("abs:href")
-                val bib = Regex("[?&]biblionumber=(\\d+)").find(href)?.groupValues?.get(1) ?: return@mapNotNull null
+                val bib = Regex("[?&]biblionumber=(\\\\d+)").find(href)?.groupValues?.get(1) ?: return@mapNotNull null
                 fetch082(source, bib, href)
             }
             all += page
@@ -49,7 +50,7 @@ class DdcSourceClient {
     }.getOrDefault(emptyList())
 
     private fun fetch082(source: Source, bib: String, recordUrl: String): DdcCandidate? {
-        val url = "${source.base}/cgi-bin/koha/opac-export.pl?op=export&bib=${bib}&format=marcxml"
+        val url = "\${source.base}/cgi-bin/koha/opac-export.pl?op=export&bib=\$bib&format=marcxml"
         val xml = http.newCall(Request.Builder().url(url).build()).execute().use { if (it.isSuccessful) it.body?.string().orEmpty() else "" }
         if (xml.isBlank()) return null
         val field = Jsoup.parse(xml, "", org.jsoup.parser.Parser.xmlParser()).select("datafield[tag=082]").firstOrNull() ?: return null
@@ -67,7 +68,8 @@ class LibraryOfCongressDdcClient {
             ?: listOfNotNull(title?.trim(), author?.trim()).joinToString(" ").takeIf(String::isNotBlank)?.let { "title=$it" }
             ?: return@withContext emptyList()
         runCatching {
-            val url = "http://lx2.loc.gov:210/LCDB?version=1.1&operation=searchRetrieve&query=${URLEncoder.encode(q, "UTF-8")}&maximumRecords=10&recordSchema=marcxml"
+            val encoded = URLEncoder.encode(q, "UTF-8")
+            val url = "http://lx2.loc.gov:210/LCDB?version=1.1&operation=searchRetrieve&query=\$encoded&maximumRecords=10&recordSchema=marcxml"
             val xml = http.newCall(Request.Builder().url(url).header("Accept", "application/xml").build()).execute().use { if (it.isSuccessful) it.body?.string().orEmpty() else "" }
             if (xml.isBlank()) return@runCatching emptyList<DdcCandidate>()
             Jsoup.parse(xml, "", org.jsoup.parser.Parser.xmlParser()).select("datafield[tag=082]").mapNotNull { f ->
