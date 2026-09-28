@@ -11,7 +11,7 @@ import com.google.mlkit.vision.common.InputImage
 
 @SuppressLint("UnsafeOptInUsageError")
 class IsbnScanner {
- fun bind(view:PreviewView,lifecycle:androidx.lifecycle.Lifecycle,onIsbn:(String)->Unit){
+ fun bind(view:PreviewView,lifecycleOwner:LifecycleOwner,onIsbn:(String)->Unit){
   val future=ProcessCameraProvider.getInstance(view.context)
   future.addListener({
    val provider=future.get()
@@ -29,7 +29,7 @@ class IsbnScanner {
       }?.let(onIsbn)
      }.addOnCompleteListener{proxy.close()}
    }
-   provider.unbindAll();provider.bindToLifecycle(lifecycle,CameraSelector.DEFAULT_BACK_CAMERA,preview,analysis)
+   provider.unbindAll();provider.bindToLifecycle(lifecycleOwner,CameraSelector.DEFAULT_BACK_CAMERA,preview,analysis)
   },view.context.mainExecutor)
  }
 }
