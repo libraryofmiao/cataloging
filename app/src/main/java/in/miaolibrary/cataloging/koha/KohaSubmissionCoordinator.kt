@@ -20,6 +20,10 @@ class KohaSubmissionCoordinator(private val api: KohaApiClient) {
     ): KohaSubmissionResult = withContext(Dispatchers.IO) {
         require(copies.isNotEmpty())
 
+        copies.filter { it.acquisitionSource == "Donation" }.forEach {
+            require(!it.donorDetails.isNullOrBlank()) { "Donor details are required for barcode " + it.barcode }
+        }
+
         val duplicateDraft = copies.groupingBy { it.barcode }.eachCount().entries.firstOrNull { it.value > 1 }
         require(duplicateDraft == null) { "Duplicate barcode in this submission: " + duplicateDraft!!.key }
 
