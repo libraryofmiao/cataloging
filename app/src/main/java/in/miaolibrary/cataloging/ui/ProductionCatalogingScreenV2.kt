@@ -33,7 +33,7 @@ fun ProductionCatalogingScreenV2(initial: CatalogRecord? = null, onStartNewBook:
     val prefs = remember { context.getSharedPreferences("cataloging_defaults", 0) }
     val tokenStore = remember { KohaTokenStore(context) }
     val scope = rememberCoroutineScope()
-    var step by remember { mutableIntStateOf(0) }
+    var step by remember { mutableIntStateOf(if (initial != null) 1 else 0) }
     var record by remember { mutableStateOf(initial ?: CatalogRecord("")) }
     var location by remember { mutableStateOf(prefs.getString("location", "") ?: "") }
     var source by remember { mutableStateOf(prefs.getString("acquisition_source", "") ?: "") }
@@ -54,19 +54,19 @@ fun ProductionCatalogingScreenV2(initial: CatalogRecord? = null, onStartNewBook:
         Modifier.fillMaxSize().safeDrawingPadding().verticalScroll(rememberScrollState()).padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
-        Text("SDLM Cataloguing", style = MaterialTheme.typography.headlineSmall)
-        Text("AACR2 • MARC21 • DDC 23 • LCSH", style = MaterialTheme.typography.bodyMedium)
-        LinearProgressIndicator({ (step + 1) / 5f }, Modifier.fillMaxWidth())
+        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+            Text("SDLM", style = MaterialTheme.typography.headlineSmall)
+            AssistChip(onClick = {}, label = { Text("CATALOGUING") })
+        }
+        LinearProgressIndicator({ if (step == 0) 0f else step / 4f }, Modifier.fillMaxWidth())
 
         when (step) {
             0 -> {
-                Text("1. Physical evidence", style = MaterialTheme.typography.titleLarge)
-                Text("Required photographs: front cover, title page, copyright/publication page and ISBN/barcode page.")
-                Text("Optional contents, preface/introduction and other relevant pages can be added later.")
-                Button({ step = 1 }, Modifier.fillMaxWidth()) { Text("CONTINUE") }
+                Text("No catalogue data", style = MaterialTheme.typography.titleLarge)
+                Button({ onStartNewBook() }, Modifier.fillMaxWidth()) { Text("CAPTURE PHOTOS") }
             }
             1 -> {
-                Text("2. Review extracted bibliographic data", style = MaterialTheme.typography.titleLarge)
+                Text("Review record", style = MaterialTheme.typography.titleLarge)
                 FieldV2("Title proper", record.titleProper) { record = record.copy(titleProper = it) }
                 FieldV2("Other title information", record.otherTitleInformation.orEmpty()) { record = record.copy(otherTitleInformation = it.ifBlank { null }) }
                 FieldV2("Author / statement of responsibility", record.statementOfResponsibility.orEmpty()) {
@@ -88,10 +88,10 @@ fun ProductionCatalogingScreenV2(initial: CatalogRecord? = null, onStartNewBook:
                 FieldV2("Summary", record.summary.orEmpty()) { record = record.copy(summary = it.ifBlank { null }) }
                 FieldV2("Notes / warnings", record.notes.joinToString("; ")) { record = record.copy(notes = it.split(";").map(String::trim).filter(String::isNotBlank)) }
                 FieldV2("Bibliography note (if applicable)", record.bibliographyNote.orEmpty()) { record = record.copy(bibliographyNote = it.ifBlank { null }) }
-                Button({ step = 2 }, Modifier.fillMaxWidth()) { Text("CONTINUE TO DDC") }
+                Button({ step = 2 }, Modifier.fillMaxWidth()) { Text("VALIDATE") }
             }
             2 -> {
-                Text("3. AACR2 / DDC validation", style = MaterialTheme.typography.titleLarge)
+                Text("AACR2 + DDC 23", style = MaterialTheme.typography.titleLarge)
                 FieldV2("Author surname", record.mainEntry?.surname.orEmpty()) { record = record.copy(mainEntry = Person(it, record.mainEntry?.forename)) }
                 FieldV2("Author forename", record.mainEntry?.forename.orEmpty()) { record = record.copy(mainEntry = Person(record.mainEntry?.surname.orEmpty(), it.ifBlank { null })) }
                 FieldV2("DDC 082 a", record.ddc.orEmpty()) {
@@ -128,8 +128,7 @@ fun ProductionCatalogingScreenV2(initial: CatalogRecord? = null, onStartNewBook:
                 message?.let { Text(it, color = MaterialTheme.colorScheme.error) }
             }
             3 -> {
-                Text("4. Copies and acquisition", style = MaterialTheme.typography.titleLarge)
-                Text("The selected location and acquisition source are persistent app defaults for future items.")
+                Text("Copies", style = MaterialTheme.typography.titleLarge)
                 Text("Location", style = MaterialTheme.typography.titleMedium)
                 LOCATIONS.forEach { value ->
                     OutlinedButton({ location = value; prefs.edit().putString("location", value).apply() }, Modifier.fillMaxWidth()) {
@@ -173,7 +172,7 @@ fun ProductionCatalogingScreenV2(initial: CatalogRecord? = null, onStartNewBook:
                 message?.let { Text(it, color = MaterialTheme.colorScheme.error) }
             }
             else -> {
-                Text("5. Final confirmation", style = MaterialTheme.typography.titleLarge)
+                Text("Final approval", style = MaterialTheme.typography.titleLarge)
                 Text("Title: " + record.titleProper)
                 Text("Author: " + (record.statementOfResponsibility ?: "Not established"))
                 Text("Publisher: " + (record.publication.publisher ?: "Not established"))
@@ -205,7 +204,7 @@ fun ProductionCatalogingScreenV2(initial: CatalogRecord? = null, onStartNewBook:
                     token = it
                     tokenStore.save(it)
                 }
-                Text("The API token is encrypted with Android Keystore and is not displayed after leaving this screen.", style = MaterialTheme.typography.bodySmall)
+                
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Checkbox(approved, { approved = it })
                     Text("I have reviewed and approve this record.")
