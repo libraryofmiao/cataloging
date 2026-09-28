@@ -163,10 +163,16 @@ fun CameraCaptureScreen(
         ) {
             val nextPhoto = state.next()
 
+            RequiredPhoto.entries.forEach { required ->
+                val captured = state.photos[required]?.let { File(it).exists() } == true
+                Text((if (captured) "✓ " else "○ ") + required.label)
+            }
             if (nextPhoto != null) {
                 Text("Next: " + nextPhoto.label)
-            detectionMessage?.let { Text(it) }
+            } else {
+                Text("All required photographs captured.")
             }
+            detectionMessage?.let { Text(it) }
 
             Button(
                 onClick = {
