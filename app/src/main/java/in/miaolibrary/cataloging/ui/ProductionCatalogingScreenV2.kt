@@ -161,45 +161,96 @@ fun ProductionCatalogingScreenV2(initial: CatalogRecord? = null, onStartNewBook:
                 message?.let { Text(it, color = MaterialTheme.colorScheme.error) }
             }
             else -> {
-                Text("Final approval", style = MaterialTheme.typography.titleLarge)
-                Text("Title: " + record.titleProper)
-                Text("Author: " + (record.statementOfResponsibility ?: "Not established"))
-                Text("Publisher: " + (record.publication.publisher ?: "Not established"))
-                Text("Publication: " + listOfNotNull(record.publication.place, record.publication.date).joinToString(" "))
-                Text("ISBN: " + record.isbns.joinToString(", "))
-                Text("DDC: " + record.ddc + " (edition " + record.ddcEdition + ")")
-                Text("Call number: " + record.callNumber)
-                Text("Location: " + location + " • Source: " + source + " • Type: " + itemType)
-                Text("MARC21 preview", style = MaterialTheme.typography.titleMedium)
+                Text("Final review", style = MaterialTheme.typography.headlineSmall)
+                Text(
+                    "AACR2 catalogue preview",
+                    style = MaterialTheme.typography.titleLarge
+                )
+                Text(
+                    "This is the catalogue-style preview of the MARC data that will be sent to Koha.",
+                    style = MaterialTheme.typography.bodyMedium
+                )
+
+                HorizontalDivider()
+
+                Aacr2Preview(record)
+
+                HorizontalDivider()
+
+                Text("Koha MARC21 fields", style = MaterialTheme.typography.titleLarge)
+                Text(
+                    "These are the MARC fields and subfields generated from the reviewed record.",
+                    style = MaterialTheme.typography.bodyMedium
+                )
+
                 Marc21Builder.build(record).fields.forEach { field ->
-                    val rendered = if (field.subfields.isNotEmpty()) field.subfields.joinToString(" ") { sf -> "$" + sf.first + " " + sf.second } else field.value.orEmpty()
-                    Text(field.tag + " " + field.ind1 + field.ind2 + " " + rendered, style = MaterialTheme.typography.bodySmall)
+                    val rendered = if (field.subfields.isNotEmpty()) {
+                        field.subfields.joinToString(" ") { sf -> "\$" + sf.first + " " + sf.second }
+                    } else {
+                        field.value.orEmpty()
+                    }
+                    Card(Modifier.fillMaxWidth()) {
+                        Column(Modifier.padding(10.dp), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                            Text(
+                                field.tag + " " + field.ind1 + field.ind2,
+                                style = MaterialTheme.typography.labelLarge
+                            )
+                            Text(rendered, style = MaterialTheme.typography.bodyMedium)
+                        }
+                    }
                 }
+
+                HorizontalDivider()
+
+                Text("Item / copy preview", style = MaterialTheme.typography.titleLarge)
+                Text("Location: " + location)
+                Text("Acquisition source: " + source)
+                Text("Item type: " + itemType)
                 drafts.forEachIndexed { index, draft ->
-                    Text("Copy " + draft.copyNumber + " • barcode " + draft.barcode, style = MaterialTheme.typography.titleMedium)
+                    Text(
+                        "Copy " + draft.copyNumber + " • barcode " + draft.barcode,
+                        style = MaterialTheme.typography.titleMedium
+                    )
                     ChoiceMenu("Location", draft.location, LOCATIONS) { value ->
-                        drafts = drafts.toMutableList().also { list -> list[index] = draft.copy(location = value) }
+                        drafts = drafts.toMutableList().also { list ->
+                            list[index] = draft.copy(location = value)
+                        }
                     }
                     ChoiceMenu("Acquisition source", draft.acquisitionSource, SOURCES) { value ->
-                        drafts = drafts.toMutableList().also { list -> list[index] = draft.copy(acquisitionSource = value, donorDetails = if (value == "Donation") donorDetails.takeIf { it.isNotBlank() } else null) }
+                        drafts = drafts.toMutableList().also { list ->
+                            list[index] = draft.copy(
+                                acquisitionSource = value,
+                                donorDetails = if (value == "Donation") donorDetails.takeIf { it.isNotBlank() } else null
+                            )
+                        }
                     }
                     ChoiceMenu("Item type", draft.itemType, TYPES) { value ->
-                        drafts = drafts.toMutableList().also { list -> list[index] = draft.copy(itemType = value) }
+                        drafts = drafts.toMutableList().also { list ->
+                            list[index] = draft.copy(itemType = value)
+                        }
                     }
                     if (index < drafts.lastIndex) HorizontalDivider()
                 }
+
                 HorizontalDivider()
                 FieldV2("Koha API token", token, true) {
                     token = it
                     tokenStore.save(it)
                 }
-                
+
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Checkbox(approved, { approved = it })
                     Text("I have reviewed and approve this record.")
                 }
-                message?.let { Text(it, color = if (it.startsWith("Success")) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.error) }
+                message?.let {
+                    Text(
+                        it,
+                        color = if (it.startsWith("Success")) MaterialTheme.colorScheme.primary
+                        else MaterialTheme.colorScheme.error
+                    )
+                }
                 if (busy) CircularProgressIndicator()
+
                 if (drafts.isEmpty() && biblioId != null && !busy) {
                     Button(onClick = onStartNewBook, modifier = Modifier.fillMaxWidth()) {
                         Text("START NEW BOOK")
@@ -223,13 +274,14 @@ fun ProductionCatalogingScreenV2(initial: CatalogRecord? = null, onStartNewBook:
                                 "Biblio " + result.biblioId + " created. Item " + result.failedBarcode + " failed. Retry will continue with the remaining item(s)."
                         } catch (t: Throwable) {
                             message = t.message ?: t.toString()
-                        } finally { busy = false }
+                        } finally {
+                            busy = false
+                        }
                     }
                 }, enabled = approved && token.isNotBlank() && !busy && drafts.isNotEmpty(), modifier = Modifier.fillMaxWidth()) {
                     Text(if (biblioId == null) "CREATE IN KOHA" else "RETRY REMAINING ITEMS")
                 }
-            }
-        }
+            }        }
     }
 }
 
@@ -289,4 +341,93 @@ private fun languageCode(value: String): String = when (value.lowercase()) {
     "bengali", "ben" -> "ben"
     "nepali", "nep" -> "nep"
     else -> value.lowercase().take(3)
+
+
+@Composable
+private fun Aacr2Preview(record: CatalogRecord) {
+    val r = record
+    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        Aacr2Line("100", r.mainEntry?.let(::formatPerson))
+        Aacr2Line(
+            "245",
+            buildString {
+                append(if (r.mainEntry != null) "1" else "0")
+                append(nonFilingIndicator(r.titleProper))
+                append("  ")
+                append(r.titleProper.trim())
+                r.otherTitleInformation?.trim()?.takeIf { it.isNotBlank() }?.let {
+                    append(" : ")
+                    append(it)
+                }
+                r.statementOfResponsibility?.trim()?.takeIf { it.isNotBlank() }?.let {
+                    append(" / ")
+                    append(it)
+                }
+            }
+        )
+        Aacr2Line("250", r.editionStatement?.trim()?.takeIf { it.isNotBlank() }?.let { it.removeSuffix(".") + "." })
+        Aacr2Line(
+            "264",
+            listOfNotNull(
+                r.publication.place?.trim()?.takeIf { it.isNotBlank() },
+                r.publication.publisher?.trim()?.takeIf { it.isNotBlank() }
+            ).joinToString(" : ").takeIf { it.isNotBlank() }?.let { base ->
+                val date = r.publication.date?.trim()?.takeIf { it.isNotBlank() }
+                if (date != null) "$base, $date." else "$base."
+            }
+        )
+        Aacr2Line(
+            "300",
+            listOfNotNull(
+                listOfNotNull(r.physicalDescription.preliminaryPages, r.physicalDescription.mainPages)
+                    .joinToString(", ").takeIf { it.isNotBlank() },
+                r.physicalDescription.illustrations.joinToString(", ").takeIf { it.isNotBlank() }?.let { ": $it" },
+                r.physicalDescription.dimensions?.trim()?.takeIf { it.isNotBlank() }?.let { "; $it" }
+            ).joinToString("").takeIf { it.isNotBlank() }?.let { "$it." }
+        )
+        Aacr2Line("020", r.isbns.firstOrNull()?.let { isbn ->
+            buildString {
+                append(isbn.trim())
+                r.printedPrices.firstOrNull()?.trim()?.takeIf { it.isNotBlank() }?.let {
+                    append(" : $it")
+                }
+                append(".")
+            }
+        })
+        Aacr2Line("490", r.series?.trim()?.takeIf { it.isNotBlank() }?.let { "$it." })
+        Aacr2Line("500", r.notes.firstOrNull()?.trim()?.takeIf { it.isNotBlank() }?.let { "$it." })
+        Aacr2Line("504", r.bibliographyNote?.trim()?.takeIf { it.isNotBlank() }?.let { "$it." })
+        Aacr2Line("505", r.contents?.trim()?.takeIf { it.isNotBlank() }?.let { "$it." })
+        Aacr2Line("520", r.summary?.trim()?.takeIf { it.isNotBlank() }?.let { "$it." })
+        r.subjects.forEach { subject ->
+            Aacr2Line("650", subject.trim().takeIf { it.isNotBlank() }?.let { "$it." })
+        }
+        Aacr2Line("082", r.ddc?.trim()?.takeIf { it.isNotBlank() })
+        Aacr2Line("942", r.callNumber?.trim()?.takeIf { it.isNotBlank() }?.let { "Call number: $it" })
+    }
+}
+
+@Composable
+private fun Aacr2Line(tag: String, value: String?) {
+    if (value.isNullOrBlank()) return
+    Card(Modifier.fillMaxWidth()) {
+        Row(Modifier.padding(10.dp), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+            Text(tag, style = MaterialTheme.typography.labelLarge, modifier = Modifier.width(42.dp))
+            Text(value, style = MaterialTheme.typography.bodyLarge, modifier = Modifier.weight(1f))
+        }
+    }
+}
+
+private fun formatPerson(person: Person): String =
+    listOfNotNull(person.surname.trim().takeIf { it.isNotBlank() }, person.forename?.trim()?.takeIf { it.isNotBlank() })
+        .joinToString(", ") + "."
+
+private fun nonFilingIndicator(title: String): Int {
+    val t = title.trimStart().lowercase()
+    return when {
+        t.startsWith("the ") -> 4
+        t.startsWith("an ") -> 3
+        t.startsWith("a ") -> 2
+        else -> 0
+}
 }
