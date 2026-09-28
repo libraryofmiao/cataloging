@@ -35,6 +35,7 @@ class MainActivity : ComponentActivity() {
                     when {
                         camera -> CameraCaptureScreen(capture,
                             { type, path -> capture = capture.add(type, path).also { it.saveTo(photoPrefs) } },
+                            { path -> capture = capture.addOptional(path).also { it.saveTo(photoPrefs) } },
                             { camera = false; extracting = true })
                         extracting -> {
                             LaunchedEffect(capture) {
