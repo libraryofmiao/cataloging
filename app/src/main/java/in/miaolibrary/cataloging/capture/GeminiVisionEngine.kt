@@ -1,4 +1,4 @@
-package in.miaolibrary.cataloging.capture
+package `in`.miaolibrary.cataloging.capture
 
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
