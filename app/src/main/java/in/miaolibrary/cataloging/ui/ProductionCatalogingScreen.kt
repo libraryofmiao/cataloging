@@ -7,6 +7,8 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.platform.LocalContext
+import in.miaolibrary.cataloging.catalog.Aacr2Normalizer
 import in.miaolibrary.cataloging.model.CatalogRecord
 import in.miaolibrary.cataloging.model.Person
 import in.miaolibrary.cataloging.model.Language
@@ -19,11 +21,15 @@ private val TYPES = listOf("BOOKS", "BOOKLET", "MAPS")
 fun ProductionCatalogingScreen(initial: CatalogRecord? = null, onSubmit: (CatalogRecord) -> Unit = {}) {
     var step by remember { mutableIntStateOf(0) }
     var record by remember { mutableStateOf(initial ?: CatalogRecord("")) }
-    var location by remember { mutableStateOf("") }
-    var source by remember { mutableStateOf("") }
+    val context = LocalContext.current
+    val prefs = remember { context.getSharedPreferences("cataloging_defaults", 0) }
+    var location by remember { mutableStateOf(prefs.getString("location", "") ?: "") }
+    var source by remember { mutableStateOf(prefs.getString("acquisition_source", "") ?: "") }
     var type by remember { mutableStateOf("BOOKS") }
     var copies by remember { mutableIntStateOf(1) }
     var confirmed by remember { mutableStateOf(false) }
+    var validationMessage by remember { mutableStateOf<String?>(null) }
+    var ddcVerifiedByCataloger by remember { mutableStateOf(initial?.ddcEdition == "23") }
 
     Column(
         Modifier.fillMaxSize()
@@ -113,15 +119,18 @@ fun ProductionCatalogingScreen(initial: CatalogRecord? = null, onSubmit: (Catalo
                     record = record.copy(mainEntry = Person(record.mainEntry?.surname.orEmpty(), it.ifBlank { null }))
                 }
                 Field("DDC 082 \$a", record.ddc.orEmpty()) {
-                    record = record.copy(ddc = it.ifBlank { null }, ddcEdition = if (it.isBlank()) null else "23")
+                    record = record.copy(ddc = it.ifBlank { null }, ddcEdition = null, callNumber = null); ddcVerifiedByCataloger = false
                 }
                 Text("DDC edition: ${record.ddcEdition ?: "Not verified"}")
+                Checkbox(checked = ddcVerifiedByCataloger, onCheckedChange = { ddcVerifiedByCataloger = it })
+                Text("I verified the DDC number against a DDC 23 source.")
                 Text("Call number: ${record.callNumber ?: "Will be generated from DDC + author surname"}")
                 Field("Subjects (LCSH)", record.subjects.joinToString("; ")) {
                     record = record.copy(subjects = it.split(";").map(String::trim).filter(String::isNotBlank))
                 }
                 Text("All manual edits must be normalized and validated again before final approval.")
-                Button(onClick = { step = 3 }, modifier = Modifier.fillMaxWidth()) { Text("REVALIDATE") }
+                Button(onClick = { val n = Aacr2Normalizer.normalize(record); record = n.record; validationMessage = n.issues.joinToString("\n") { it.message }.takeIf { it.isNotBlank() }; if (n.valid && record.ddc != null && ddcVerifiedByCataloger) step = 3 }, modifier = Modifier.fillMaxWidth()) { Text("REVALIDATE") }
+                validationMessage?.let { Text(it, color = MaterialTheme.colorScheme.error) }
             }
 
             3 -> {
@@ -129,13 +138,13 @@ fun ProductionCatalogingScreen(initial: CatalogRecord? = null, onSubmit: (Catalo
                 Text("One bibliographic record, separate Koha item for each physical copy.")
                 Text("Location")
                 LOCATIONS.forEach { value ->
-                    OutlinedButton(onClick = { location = value }, modifier = Modifier.fillMaxWidth()) {
+                    OutlinedButton(onClick = { location = value; prefs.edit().putString("location", value).apply() }, modifier = Modifier.fillMaxWidth()) {
                         Text(if (location == value) "Selected: $value" else value)
                     }
                 }
                 Text("Acquisition source")
                 SOURCES.forEach { value ->
-                    OutlinedButton(onClick = { source = value }, modifier = Modifier.fillMaxWidth()) {
+                    OutlinedButton(onClick = { source = value; prefs.edit().putString("acquisition_source", value).apply() }, modifier = Modifier.fillMaxWidth()) {
                         Text(if (source == value) "Selected: $value" else value)
                     }
                 }
@@ -151,8 +160,8 @@ fun ProductionCatalogingScreen(initial: CatalogRecord? = null, onSubmit: (Catalo
                     Button(onClick = { copies++ }) { Text("+") }
                 }
                 Button(
-                    onClick = { step = 4 },
-                    enabled = location.isNotBlank() && source.isNotBlank(),
+                    onClick = { val n = Aacr2Normalizer.normalize(record); record = n.record; validationMessage = n.issues.joinToString("\n") { it.message }.takeIf { it.isNotBlank() }; if (n.valid && record.ddc != null && ddcVerifiedByCataloger && location.isNotBlank() && source.isNotBlank()) step = 4 },
+                    enabled = location.isNotBlank() && source.isNotBlank() && record.ddc != null && ddcVerifiedByCataloger,
                     modifier = Modifier.fillMaxWidth()
                 ) { Text("FINAL REVIEW") }
             }
