@@ -8,6 +8,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
 import in.miaolibrary.cataloging.capture.*
 import in.miaolibrary.cataloging.ui.GeminiSetupScreen
 import in.miaolibrary.cataloging.ui.ProductionCatalogingScreen
@@ -38,13 +39,13 @@ class MainActivity:ComponentActivity(){
         extracting=false
        }
        Box(Modifier.fillMaxSize(),contentAlignment=Alignment.Center){
-        Column(horizontalAlignment=Alignment.CenterHorizontally,verticalArrangement=Arrangement.spacedBy(androidx.compose.ui.unit.dp(12f))){
+        Column(horizontalAlignment=Alignment.CenterHorizontally,verticalArrangement=Arrangement.spacedBy(12.dp)){
          CircularProgressIndicator()
          Text("Gemini is examining the book photographs…")
         }
        }
       }
-      error!=null->Column(Modifier.fillMaxSize().padding(androidx.compose.ui.unit.dp(24f)),verticalArrangement=Arrangement.spacedBy(androidx.compose.ui.unit.dp(16f))){
+      error!=null->Column(Modifier.fillMaxSize().padding(24.dp),verticalArrangement=Arrangement.spacedBy(androidx.compose.ui.unit.dp(16f))){
        Text("Gemini extraction failed",style=MaterialTheme.typography.headlineSmall)
        Text(error!!)
        Button({error=null;camera=true;capture=PhotoCaptureState()}){Text("CAPTURE AGAIN")}
