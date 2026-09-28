@@ -28,7 +28,7 @@ private val SOURCES = listOf("RRRLF", "State Central Library", "Donation")
 private val TYPES = listOf("BOOKS", "BOOKLET", "MAPS")
 
 @Composable
-fun ProductionCatalogingScreenV2(initial: CatalogRecord? = null) {
+fun ProductionCatalogingScreenV2(initial: CatalogRecord? = null, onStartNewBook: () -> Unit = {}) {
     val context = LocalContext.current
     val prefs = remember { context.getSharedPreferences("cataloging_defaults", 0) }
     val tokenStore = remember { KohaTokenStore(context) }
@@ -213,6 +213,12 @@ fun ProductionCatalogingScreenV2(initial: CatalogRecord? = null) {
                 }
                 message?.let { Text(it, color = if (it.startsWith("Success")) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.error) }
                 if (busy) CircularProgressIndicator()
+                if (drafts.isEmpty() && biblioId != null && !busy) {
+                    Button(onClick = onStartNewBook, modifier = Modifier.fillMaxWidth()) {
+                        Text("START NEW BOOK")
+                    }
+                }
+
                 Button({
                     busy = true
                     message = null
