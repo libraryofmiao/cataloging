@@ -2,6 +2,8 @@ package `in`.miaolibrary.cataloging.capture
 
 import `in`.miaolibrary.cataloging.BuildConfig
 
+import android.content.Context
+import android.content.SharedPreferences
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.util.Base64
@@ -17,11 +19,27 @@ import java.io.File
 import java.util.concurrent.TimeUnit
 
 class GeminiVisionEngine(
-    private val apiKey: String = BuildConfig.GEMINI_API_KEY,
+    private val context: Context,
     private val http: OkHttpClient = DEFAULT_HTTP
 ) : VisionEngine {
+    private val preferences: SharedPreferences =
+        context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+
+    fun getApiKey(): String =
+        preferences.getString(KEY_GEMINI_API_KEY, null)?.trim().orEmpty()
+            .ifBlank { BuildConfig.GEMINI_API_KEY.trim() }
+
+    fun saveApiKey(key: String) {
+        require(key.trim().isNotEmpty()) { "Gemini API key cannot be empty." }
+        preferences.edit().putString(KEY_GEMINI_API_KEY, key.trim()).apply()
+    }
+
+    fun hasApiKey(): Boolean = getApiKey().isNotBlank()
+
     override suspend fun extract(photoPaths: List<String>): ExtractedBook = withContext(Dispatchers.IO) {
-        require(apiKey.isNotBlank()) { "Gemini API key is not configured. Add GEMINI_API_KEY to the app build configuration." }
+        val apiKey = getApiKey()
+    override suspend fun extract(photoPaths: List<String>): ExtractedBook = withContext(Dispatchers.IO) {
+        require(apiKey.isNotBlank()) { "Gemini API key is not configured. Enter your Gemini API key." }
         require(photoPaths.isNotEmpty()) { "No photographs were supplied" }
 
         val parts = buildJsonArray {
@@ -126,6 +144,8 @@ class GeminiVisionEngine(
     private class GeminiRequestException(val code: Int, message: String) : IllegalStateException(message)
 
     companion object {
+        private const val PREFS_NAME = "gemini_preferences"
+        private const val KEY_GEMINI_API_KEY = "gemini_api_key"
         private val DEFAULT_HTTP = OkHttpClient.Builder()
             .connectTimeout(12, TimeUnit.SECONDS)
             .readTimeout(45, TimeUnit.SECONDS)
