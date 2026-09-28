@@ -37,7 +37,7 @@ class MainActivity : ComponentActivity() {
                             { camera = false; extracting = true })
                         extracting -> {
                             LaunchedEffect(capture) {
-                                runCatching { BookExtractionCoordinator(FreeOnDeviceVisionEngine()).extract(capture) }
+                                runCatching { BookExtractionCoordinator(GeminiVisionEngine()).extract(capture) }
                                     .onSuccess { record = it }
                                     .onFailure { error = it.message ?: it.toString() }
                                 extracting = false
@@ -46,7 +46,7 @@ class MainActivity : ComponentActivity() {
                                 Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(14.dp)) {
                                     CircularProgressIndicator()
                                     Text("Reading book pages…", style = MaterialTheme.typography.titleMedium)
-                                    Text("Fast on-device OCR • works offline", style = MaterialTheme.typography.bodyMedium)
+                                    Text("Gemini 2.5 Flash • physical-book evidence extraction", style = MaterialTheme.typography.bodyMedium)
                                 }
                             }
                         }
