@@ -20,6 +20,7 @@ import `in`.miaolibrary.cataloging.model.CatalogRecord
 import `in`.miaolibrary.cataloging.model.CopyDraft
 import `in`.miaolibrary.cataloging.model.Language
 import `in`.miaolibrary.cataloging.model.Person
+import `in`.miaolibrary.cataloging.marc.Marc21Builder
 import kotlinx.coroutines.launch
 
 private val LOCATIONS = listOf("CHILD", "GEN", "NALC", "NE", "RR", "RRRLF")
@@ -80,11 +81,12 @@ fun ProductionCatalogingScreenV2(initial: CatalogRecord? = null) {
                 FieldV2("Dimensions", record.physicalDescription.dimensions.orEmpty()) { record = record.copy(physicalDescription = record.physicalDescription.copy(dimensions = it.ifBlank { null })) }
                 FieldV2("ISBN", record.isbns.firstOrNull().orEmpty()) { record = record.copy(isbns = it.split(",").map(String::trim).filter(String::isNotBlank)) }
                 FieldV2("Printed price", record.printedPrices.joinToString(", ")) { record = record.copy(printedPrices = it.split(",").map(String::trim).filter(String::isNotBlank)) }
-                FieldV2("Language", record.languages.firstOrNull()?.name.orEmpty()) { record = record.copy(languages = if (it.isBlank()) emptyList() else listOf(Language(it, languageCode(it)))) }
+                FieldV2("Languages (comma-separated)", record.languages.joinToString(", ") { it.name }) { record = record.copy(languages = parseLanguages(it)) }
                 FieldV2("Series", record.series.orEmpty()) { record = record.copy(series = it.ifBlank { null }) }
                 FieldV2("Contents", record.contents.orEmpty()) { record = record.copy(contents = it.ifBlank { null }) }
                 FieldV2("Summary", record.summary.orEmpty()) { record = record.copy(summary = it.ifBlank { null }) }
                 FieldV2("Notes / warnings", record.notes.joinToString("; ")) { record = record.copy(notes = it.split(";").map(String::trim).filter(String::isNotBlank)) }
+                FieldV2("Bibliography note (if applicable)", record.bibliographyNote.orEmpty()) { record = record.copy(bibliographyNote = it.ifBlank { null }) }
                 Button({ step = 2 }, Modifier.fillMaxWidth()) { Text("CONTINUE TO DDC") }
             }
             2 -> {
@@ -101,6 +103,11 @@ fun ProductionCatalogingScreenV2(initial: CatalogRecord? = null) {
                     Text("I verified the DDC number against a DDC 23 source.")
                 }
                 Text("Call number: " + (record.callNumber ?: "Will be generated after validation"))
+                val ddcSources = record.evidence?.ddcCandidates.orEmpty().filter { it.edition == "23" }
+                if (ddcSources.isNotEmpty()) {
+                    Text("DDC 23 evidence sources:", style = MaterialTheme.typography.titleMedium)
+                    ddcSources.take(5).forEach { Text(it.number + " — " + it.source) }
+                } else Text("No verified DDC 23 candidate was found.")
                 FieldV2("Subjects (LCSH)", record.subjects.joinToString("; ")) { record = record.copy(subjects = it.split(";").map(String::trim).filter(String::isNotBlank)) }
                 Button({
                     val n = Aacr2Normalizer.normalize(record)
@@ -145,7 +152,7 @@ fun ProductionCatalogingScreenV2(initial: CatalogRecord? = null) {
                     if (n.valid && record.ddc != null && ddcVerified && location.isNotBlank() && source.isNotBlank() &&
                         (source != "Donation" || donorDetails.isNotBlank())) {
                         drafts = CopyDraftFactory(BarcodeSequence(context)).create(
-                            record, copies, location, source, itemType, purchasePrice.toDoubleOrNull(),
+                            record, copies, location, source, itemType, parsePurchasePrice(purchasePrice),
                             donorDetails.takeIf { source == "Donation" }
                         )
                         approved = false
@@ -166,6 +173,11 @@ fun ProductionCatalogingScreenV2(initial: CatalogRecord? = null) {
                 Text("DDC: " + record.ddc + " (edition " + record.ddcEdition + ")")
                 Text("Call number: " + record.callNumber)
                 Text("Location: " + location + " • Source: " + source + " • Type: " + itemType)
+                Text("MARC21 preview", style = MaterialTheme.typography.titleMedium)
+                Marc21Builder.build(record).fields.forEach { field ->
+                    val rendered = if (field.subfields.isNotEmpty()) field.subfields.joinToString(" ") { sf -> "$" + sf.first + " " + sf.second } else field.value.orEmpty()
+                    Text(field.tag + " " + field.ind1 + field.ind2 + " " + rendered, style = MaterialTheme.typography.bodySmall)
+                }
                 drafts.forEach { Text("Copy " + it.copyNumber + ": barcode " + it.barcode) }
                 HorizontalDivider()
                 FieldV2("Koha API token", token, true) {
@@ -225,6 +237,10 @@ private fun parsePerson(raw: String): Person? {
         if (p.size == 1) Person(p[0]) else Person(p.last(), p.dropLast(1).joinToString(" "))
     }
 }
+
+private fun parseLanguages(raw: String): List<Language> = raw.split(",").map(String::trim).filter(String::isNotBlank).map { Language(it, languageCode(it)) }.distinctBy { it.code }
+
+private fun parsePurchasePrice(raw: String): Double? = Regex("""(?i)(\\d+(?:[.,]\\d{1,2})?)""").find(raw)?.groupValues?.getOrNull(1)?.replace(",", ".")?.toDoubleOrNull()
 
 private fun languageCode(value: String): String = when (value.lowercase()) {
     "english", "eng" -> "eng"
