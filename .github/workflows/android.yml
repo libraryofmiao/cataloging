@@ -28,3 +28,4 @@ jobs:
           name: MiaoLibrary-Cataloging-debug-apk
           path: app/build/outputs/apk/debug/*.apk
           if-no-files-found: error
+# Trigger rebuild after configuring GEMINI_API_KEY repository secret.
