@@ -2,7 +2,6 @@ package `in`.miaolibrary.cataloging.capture
 
 import `in`.miaolibrary.cataloging.ddc.DdcSourceClient
 import `in`.miaolibrary.cataloging.ddc.LibraryOfCongressDdcClient
-import `in`.miaolibrary.cataloging.match.DdcMatcher
 import `in`.miaolibrary.cataloging.match.OpenLibraryClient
 import `in`.miaolibrary.cataloging.model.*
 
@@ -42,12 +41,10 @@ class BookExtractionCoordinator(
 
         val identityMatches = runCatching { openLibrary.findIdentityMatches(isbn, base.titleProper, r.author) }.getOrDefault(emptyList())
         val candidates = runCatching {
-            kotlinx.coroutines.coroutineScope {
-                val a = kotlinx.coroutines.async { ddcSources.find(isbn, base.titleProper, r.author) }
-                val b = kotlinx.coroutines.async { locDdc.find(isbn, base.titleProper, r.author) }
-                val c = kotlinx.coroutines.async { openLibrary.findVerifiedDdc(isbn, base.titleProper, r.author) }
-                (a.await() + b.await() + c.await()).distinctBy { it.number + "|" + it.edition + "|" + it.source }
-            }
+            val a = ddcSources.find(isbn, base.titleProper, r.author)
+            val b = locDdc.find(isbn, base.titleProper, r.author)
+            val c = openLibrary.findVerifiedDdc(isbn, base.titleProper, r.author)
+            (a + b + c).distinctBy { it.number + "|" + it.edition + "|" + it.source }
         }.getOrDefault(emptyList())
 
         // DDC is evidence only: retain every number fetched from the OPACs/sites.\n        val evidenceFields = mutableMapOf<String, List<EvidenceValue>>()
