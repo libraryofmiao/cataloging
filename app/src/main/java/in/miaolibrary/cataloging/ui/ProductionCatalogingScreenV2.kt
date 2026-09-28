@@ -129,24 +129,15 @@ fun ProductionCatalogingScreenV2(initial: CatalogRecord? = null, onStartNewBook:
             }
             3 -> {
                 Text("Copies", style = MaterialTheme.typography.titleLarge)
-                Text("Location", style = MaterialTheme.typography.titleMedium)
-                LOCATIONS.forEach { value ->
-                    OutlinedButton({ location = value; prefs.edit().putString("location", value).apply() }, Modifier.fillMaxWidth()) {
-                        Text(if (location == value) "Selected: " + value else value)
-                    }
+                ChoiceMenu("Location", location.ifBlank { "Select" }, LOCATIONS) {
+                    location = it
+                    prefs.edit().putString("location", it).apply()
                 }
-                Text("Acquisition source", style = MaterialTheme.typography.titleMedium)
-                SOURCES.forEach { value ->
-                    OutlinedButton({ source = value; prefs.edit().putString("acquisition_source", value).apply() }, Modifier.fillMaxWidth()) {
-                        Text(if (source == value) "Selected: " + value else value)
-                    }
+                ChoiceMenu("Acquisition source", source.ifBlank { "Select" }, SOURCES) {
+                    source = it
+                    prefs.edit().putString("acquisition_source", it).apply()
                 }
-                Text("Item type", style = MaterialTheme.typography.titleMedium)
-                TYPES.forEach { value ->
-                    OutlinedButton({ itemType = value }, Modifier.fillMaxWidth()) {
-                        Text(if (itemType == value) "Selected: " + value else value)
-                    }
-                }
+                ChoiceMenu("Item type", itemType, TYPES) { itemType = it }
                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     Button({ copies = (copies - 1).coerceAtLeast(1) }) { Text("-") }
                     Text(copies.toString() + " copies", Modifier.padding(16.dp))
