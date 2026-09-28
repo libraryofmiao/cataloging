@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.material3.Button
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
+import kotlinx.coroutines.launch
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -31,6 +32,10 @@ fun CameraCaptureScreen(
     val lifecycleOwner = LocalLifecycleOwner.current
     var cameraPermissionGranted by remember { mutableStateOf(false) }
     var imageCapture by remember { mutableStateOf<ImageCapture?>(null) }
+    var detectionMessage by remember { mutableStateOf<String?>(null) }
+    var busy by remember { mutableStateOf(false) }
+    val scope = rememberCoroutineScope()
+    val detector = remember { SmartPhotoClassifier() }
 
     val permissionLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestPermission()
@@ -58,16 +63,24 @@ fun CameraCaptureScreen(
         val output = ImageCapture.OutputFileOptions.Builder(file).build()
         val camera = imageCapture ?: return
 
+        busy = true
         camera.takePicture(
             output,
             context.mainExecutor,
             object : ImageCapture.OnImageSavedCallback {
-                override fun onError(exception: ImageCaptureException) = Unit
+                override fun onError(exception: ImageCaptureException) { busy = false; detectionMessage = "Could not save the photograph. Please try again." }
 
                 override fun onImageSaved(
                     outputFileResults: ImageCapture.OutputFileResults
                 ) {
                     onCaptured(photo, file.absolutePath)
+                    busy = false
+                    scope.launch {
+                        detectionMessage = runCatching { detector.classify(file.absolutePath) }.getOrNull()?.let {
+                            if (it.type.name.equals(photo.name, true)) "✓ ${it.type.label} detected"
+                            else "Detected: ${it.type.label} • expected ${photo.label}"
+                        }
+                    }
                 }
             }
         )
@@ -114,7 +127,8 @@ fun CameraCaptureScreen(
             val nextPhoto = state.next()
 
             if (nextPhoto != null) {
-                Text("Capture: " + nextPhoto.label)
+                Text("Next: " + nextPhoto.label)
+            detectionMessage?.let { Text(it) }
             }
 
             Button(
@@ -123,10 +137,10 @@ fun CameraCaptureScreen(
                         capturePhoto(nextPhoto)
                     }
                 },
-                enabled = nextPhoto != null,
+                enabled = nextPhoto != null && !busy,
                 modifier = Modifier.fillMaxWidth()
             ) {
-                Text("CAPTURE")
+                Text(if (busy) "SAVING…" else "CAPTURE")
             }
 
             Button(
