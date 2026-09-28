@@ -7,6 +7,7 @@ enum class EvidenceSource { PHYSICAL, EXTERNAL_CATALOGUE, PUBLISHER, AI_INFERENC
 @Serializable data class Publication(val place:String?=null,val publisher:String?=null,val date:String?=null)
 @Serializable data class PhysicalDescription(val preliminaryPages:String?=null,val mainPages:String?=null,val illustrations:List<String> = emptyList(),val dimensions:String?=null)
 @Serializable data class Language(val name:String,val code:String)
+@Serializable data class ExternalIdentityCandidate(val title:String?,val author:String?,val isbn:String?,val source:String,val recordUrl:String?,val confidence:Double)
 @Serializable data class DdcCandidate(val number:String,val edition:String?,val source:String,val recordUrl:String?,val sourceBiblionumber:String?,val confidence:Double)
 @Serializable data class CatalogRecord(
  val titleProper:String,val otherTitleInformation:String?=null,val statementOfResponsibility:String?=null,
@@ -16,5 +17,5 @@ enum class EvidenceSource { PHYSICAL, EXTERNAL_CATALOGUE, PUBLISHER, AI_INFERENC
  val series:String?=null,val notes:List<String> = emptyList(),val bibliographyNote:String?=null,val contents:String?=null,val summary:String?=null,
  val subjects:List<String> = emptyList(),val ddc:String?=null,val ddcEdition:String?=null,val callNumber:String?=null,
  val itemType:String="BOOKS",val evidence:BookEvidence?=null)
-@Serializable data class BookEvidence(val photos:List<String> = emptyList(),val fields:Map<String,List<EvidenceValue>> = emptyMap(),val ddcCandidates:List<DdcCandidate> = emptyList())
+@Serializable data class BookEvidence(val photos:List<String> = emptyList(),val fields:Map<String,List<EvidenceValue>> = emptyMap(),val identityMatches:List<ExternalIdentityCandidate> = emptyList(),val ddcCandidates:List<DdcCandidate> = emptyList())
 data class CopyDraft(val barcode:String,val homeLibrary:String="SDLM",val holdingLibrary:String="SDLM",val location:String,val itemType:String="BOOKS",val callNumber:String,val acquisitionDate:String,val acquisitionSource:String,val purchasePrice:Double?=null,val donorDetails:String?=null,val copyNumber:String="1")
