@@ -18,11 +18,7 @@ import java.util.concurrent.TimeUnit
 
 class GeminiVisionEngine(
     private val apiKey: String = BuildConfig.GEMINI_API_KEY,
-    private val http: OkHttpClient = OkHttpClient.Builder()
-        .connectTimeout(20, TimeUnit.SECONDS)
-        .readTimeout(90, TimeUnit.SECONDS)
-        .writeTimeout(90, TimeUnit.SECONDS)
-        .build()
+    private val http: OkHttpClient = DEFAULT_HTTP
 ) : VisionEngine {
     override suspend fun extract(photoPaths: List<String>): ExtractedBook = withContext(Dispatchers.IO) {
         require(apiKey.isNotBlank()) { "Gemini API key is not configured. Add GEMINI_API_KEY to the app build configuration." }
