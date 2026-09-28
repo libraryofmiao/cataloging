@@ -44,10 +44,10 @@ class FreeBookHeuristics {
     private fun detectLanguage(text:String):String? {
         val lower=text.lowercase()
         return when {
-            text.any { it in '\u0900'..'\u097F' } || listOf("hindi","हिंदी").any(lower::contains) -> "Hindi"
-            listOf("assamese","অসমীয়া").any(lower::contains) -> "Assamese"
-            listOf("bengali","বাংলা").any(lower::contains) -> "Bengali"
-            listOf("nepali","नेपाली").any(lower::contains) -> "Nepali"
+            text.any { it in '\u0900'..'\u097F' } || lower.contains("hindi") || lower.contains("हिंदी") -> "Hindi"
+            lower.contains("assamese") || lower.contains("অসমীয়া") -> "Assamese"
+            lower.contains("bengali") || lower.contains("বাংলা") -> "Bengali"
+            lower.contains("nepali") || lower.contains("नेपाली") -> "Nepali"
             lower.contains("english") -> "English"
             else -> null
         }
