@@ -46,22 +46,16 @@ class GeminiVisionEngine(
                 putJsonObject("responseSchema") {
                     put("type", "OBJECT")
                     putJsonObject("properties") {
-                        listOf("title","author","publisher","publication_date","isbn","edition","main_pages","language",
-                        "printed_price","publication_place","preliminary_pages","illustrations","dimensions","series",
-                        "contents","summary","physical_warnings").forEach { key ->
-                        // Gemini responseSchema expects each property value to be a
-                        // Schema object. An array such as ["string","null"] is invalid.
-                        putJsonObject(key) {
-                            put("type", "STRING")
-                            put("nullable", true)
-                        }
-                    }
-                }
-                    }
-                    putJsonArray("required") {
-                        listOf("title","author","publisher","publication_date","isbn","edition","main_pages","language",
+                        listOf(
+                            "title","author","publisher","publication_date","isbn","edition","main_pages","language",
                             "printed_price","publication_place","preliminary_pages","illustrations","dimensions","series",
-                            "contents","summary","physical_warnings").forEach { add(it) }
+                            "contents","summary","physical_warnings"
+                        ).forEach { key ->
+                            putJsonObject(key) {
+                                put("type", "STRING")
+                                put("nullable", true)
+                            }
+                        }
                     }
                 }
             }
