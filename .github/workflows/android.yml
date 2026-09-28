@@ -15,4 +15,7 @@ jobs:
       - uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: '8.10.2'
+      - name: Normalize Kotlin package keyword
+        run: |
+          find app/src/main/java -type f -name '*.kt' -print0 | xargs -0 sed -i -E 's/\bin\.miaolibrary/\x60in\x60.miaolibrary/g'
       - run: gradle assembleDebug
