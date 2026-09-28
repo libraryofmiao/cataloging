@@ -50,8 +50,7 @@ class BookExtractionCoordinator(
             }
         }.getOrDefault(emptyList())
 
-        val verified = DdcMatcher.choose(candidates.filter { it.edition == "23" })
-        val evidenceFields = mutableMapOf<String, List<EvidenceValue>>()
+        // DDC is evidence only: retain every number fetched from the OPACs/sites.\n        val evidenceFields = mutableMapOf<String, List<EvidenceValue>>()
         fun addEvidence(field: String, value: String?) {
             if (!value.isNullOrBlank()) {
                 evidenceFields[field] = listOf(EvidenceValue(value, EvidenceSource.PHYSICAL, 0.90, true))
@@ -77,11 +76,7 @@ class BookExtractionCoordinator(
             ddcCandidates = candidates
         )
         val withEvidence = base.copy(evidence = evidence)
-        return if (verified != null) {
-            withEvidence.copy(ddc = verified.number, ddcEdition = "23")
-        } else {
-            withEvidence
-        }
+        return withEvidence
     }
 
     private fun parsePerson(raw: String?): Person? {
