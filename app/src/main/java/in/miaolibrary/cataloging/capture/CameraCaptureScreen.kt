@@ -86,7 +86,7 @@ fun CameraCaptureScreen(
         )
     }
 
-    Box(modifier = Modifier.fillMaxSize().safeDrawingPadding()) {
+    Box(modifier = Modifier.fillMaxSize()) {
         AndroidView(
             factory = { ctx ->
                 PreviewView(ctx).also { previewView ->
@@ -122,7 +122,7 @@ fun CameraCaptureScreen(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(16.dp)
-                .align(Alignment.BottomCenter)
+                .align(Alignment.BottomCenter)\n                .navigationBarsPadding()
         ) {
             val nextPhoto = state.next()
 
