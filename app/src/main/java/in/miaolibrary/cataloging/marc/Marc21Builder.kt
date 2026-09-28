@@ -1,7 +1,7 @@
 package in.miaolibrary.cataloging.marc
 import in.miaolibrary.cataloging.model.CatalogRecord
 
-data class MarcField(val tag:String,val value:String?=null,val ind1:Char=' ',val ind2:Char=' ',val subfields:List<Pair<Char,String>>=emptyList())
+data class MarcField(val tag:String,val value:String?=null,val ind1:Char=' ',val ind2:Char=' ',val subfields:List<Pair<Char,String>> = emptyList())
 data class MarcRecord(val leader:String,val fields:List<MarcField>)
 
 object Marc21Builder {
