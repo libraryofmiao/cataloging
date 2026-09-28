@@ -1,4 +1,4 @@
-package in.miaolibrary.cataloging
+package `in`.miaolibrary.cataloging
 
 import android.os.Bundle
 import androidx.activity.ComponentActivity
@@ -9,9 +9,9 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import in.miaolibrary.cataloging.capture.*
-import in.miaolibrary.cataloging.ui.GeminiSetupScreen
-import in.miaolibrary.cataloging.ui.ProductionCatalogingScreen
+import `in`.miaolibrary.cataloging.capture.*
+import `in`.miaolibrary.cataloging.ui.GeminiSetupScreen
+import `in`.miaolibrary.cataloging.ui.ProductionCatalogingScreen
 import kotlinx.coroutines.launch
 
 class MainActivity:ComponentActivity(){
@@ -25,7 +25,7 @@ class MainActivity:ComponentActivity(){
      var capture by remember{mutableStateOf(PhotoCaptureState())}
      var camera by remember{mutableStateOf(configured)}
      var extracting by remember{mutableStateOf(false)}
-     var record by remember{mutableStateOf<in.miaolibrary.cataloging.model.CatalogRecord?>(null)}
+     var record by remember{mutableStateOf<`in`.miaolibrary.cataloging.model.CatalogRecord?>(null)}
      var error by remember{mutableStateOf<String?>(null)}
 
      when{
