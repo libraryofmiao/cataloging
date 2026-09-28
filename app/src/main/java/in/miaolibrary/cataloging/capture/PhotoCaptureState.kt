@@ -10,10 +10,12 @@ enum class RequiredPhoto(val label: String) {
     ISBN_PAGE("ISBN / barcode page")
 }
 
-data class PhotoCaptureState(val photos: Map<RequiredPhoto, String> = emptyMap()) {
+data class PhotoCaptureState(val photos: Map<RequiredPhoto, String> = emptyMap(), val optionalPhotos: List<String> = emptyList()) {
     fun isComplete() = RequiredPhoto.entries.all { photos[it] != null && File(photos[it]!!).exists() }
     fun next(): RequiredPhoto? = RequiredPhoto.entries.firstOrNull { photos[it] == null || !File(photos[it]!!).exists() }
     fun add(type: RequiredPhoto, path: String) = copy(photos = photos + (type to path))
+    fun addOptional(path: String) = copy(optionalPhotos = optionalPhotos + path)
+    fun allPhotos(): List<String> = photos.values.toList() + optionalPhotos
 
     fun saveTo(prefs: SharedPreferences) {
         val editor = prefs.edit()
