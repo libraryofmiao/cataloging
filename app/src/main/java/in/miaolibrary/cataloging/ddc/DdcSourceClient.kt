@@ -15,7 +15,7 @@ class DdcSourceClient(private val http:OkHttpClient=OkHttpClient()) {
  private data class Source(val name:String,val base:String)
 
  private val sources=listOf(
-  Source("Tezu Digital Library","https://tezudl.in"),
+  Source("Tezu Digital Library","http://agnee.tezu.ernet.in:8999"),
   Source("State Central Library, Itanagar","https://sclitanagar.in"),
   Source("Pasighat Digital Library","https://pasighatdl.in")
  )
@@ -55,7 +55,7 @@ class LibraryOfCongressDdcClient(private val http:OkHttpClient=OkHttpClient()){
  suspend fun find(isbn:String?,title:String?,author:String?): List<DdcCandidate> =withContext(Dispatchers.IO){
   val q=isbn?.takeIf{it.isNotBlank()}?.let{"isbn=$it"}?:listOfNotNull(title,author).joinToString(" ").takeIf{it.isNotBlank()}?.let{"title=$it"}?:return@withContext emptyList()
   runCatching{
-   val url="https://www.loc.gov/z3950/lcdb?version=1.1&operation=searchRetrieve&query=${URLEncoder.encode(q,"UTF-8")}&maximumRecords=10&recordSchema=marcxml"
+   val url="https://www.loc.gov/z39voy?version=1.1&operation=searchRetrieve&query=${URLEncoder.encode(q,"UTF-8")}&maximumRecords=10&recordSchema=marcxml"
    val xml=http.newCall(Request.Builder().url(url).build()).execute().use{it.body?.string().orEmpty()}
    val doc=Jsoup.parse(xml,"",org.jsoup.parser.Parser.xmlParser())
    doc.select("datafield[tag=082]").mapNotNull{f->
