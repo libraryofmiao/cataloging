@@ -52,7 +52,7 @@ class DdcSourceClient(private val http:OkHttpClient=OkHttpClient()) {
 }
 
 class LibraryOfCongressDdcClient(private val http:OkHttpClient=OkHttpClient()){
- suspend fun find(isbn:String?,title:String?,author:String?):List<DdcCandidate>=withContext(Dispatchers.IO){
+ suspend fun find(isbn:String?,title:String?,author:String?): List<DdcCandidate> =withContext(Dispatchers.IO){
   val q=isbn?.takeIf{it.isNotBlank()}?.let{"isbn=$it"}?:listOfNotNull(title,author).joinToString(" ").takeIf{it.isNotBlank()}?.let{"title=$it"}?:return@withContext emptyList()
   runCatching{
    val url="https://www.loc.gov/z3950/lcdb?version=1.1&operation=searchRetrieve&query=${URLEncoder.encode(q,"UTF-8")}&maximumRecords=10&recordSchema=marcxml"
