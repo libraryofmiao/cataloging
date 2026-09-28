@@ -95,33 +95,16 @@ fun ProductionCatalogingScreenV2(initial: CatalogRecord? = null, onStartNewBook:
                 FieldV2("Author forename", record.mainEntry?.forename.orEmpty()) { record = record.copy(mainEntry = Person(record.mainEntry?.surname.orEmpty(), it.ifBlank { null })) }
                 FieldV2("DDC 082 a", record.ddc.orEmpty()) {
                     record = record.copy(ddc = it.ifBlank { null }, ddcEdition = null, callNumber = null)
-                    ddcVerified = false
                 }
                 Text("Call number: " + (record.callNumber ?: "Will be generated after validation"))
-                val ddcSources = record.evidence?.ddcCandidates.orEmpty().filter { it.edition?.trim() == "23" }
-                val ddcNumbers = ddcSources.map { it.number.trim().removeSuffix(".") }.distinct()
-                when {
-                    ddcSources.isEmpty() -> {
-                        Text(
-                            "No exact DDC 23 source result. Enter a DDC 23 number only after catalogue review.",
-                            color = MaterialTheme.colorScheme.error
-                        )
-                    }
-                    ddcNumbers.size > 1 -> {
-                        Text(
-                            "DDC 23 disagreement — sources returned different numbers. Do not auto-select; review the evidence and enter the final number manually.",
-                            color = MaterialTheme.colorScheme.error
-                        )
-                        Text("DDC 23 evidence sources:", style = MaterialTheme.typography.titleMedium)
-                        ddcSources.take(10).forEach {
-                            Text(it.number + " — " + it.source)
-                        }
-                    }
-                    else -> {
-                        Text("DDC 23 evidence sources:", style = MaterialTheme.typography.titleMedium)
-                        ddcSources.take(10).forEach {
-                            Text(it.number + " — " + it.source)
-                        }
+                val ddcSources = record.evidence?.ddcCandidates.orEmpty()
+                if (ddcSources.isEmpty()) {
+                    Text("No DDC number was fetched from the configured OPACs/sites.")
+                } else {
+                    Text("Fetched DDC numbers:", style = MaterialTheme.typography.titleMedium)
+                    ddcSources.take(20).forEach { candidate ->
+                        val edition = candidate.edition?.trim()?.takeIf { it.isNotBlank() }?.let { " (edition $it)" } ?: ""
+                        Text(candidate.number.trim() + edition + " — " + candidate.source)
                     }
                 }
                 FieldV2("Subjects (LCSH — librarian validated)", record.subjects.joinToString("; ")) {
