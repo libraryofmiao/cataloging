@@ -73,14 +73,31 @@ fun CameraCaptureScreen(
                 override fun onImageSaved(
                     outputFileResults: ImageCapture.OutputFileResults
                 ) {
-                    onCaptured(photo, file.absolutePath)
                     busy = false
                     scope.launch {
-                        detectionMessage = runCatching { detector.classify(file.absolutePath) }.getOrNull()?.let {
-                            if (it.type.name.equals(photo.name, true)) "✓ ${it.type.label} detected"
-                            else "Detected: ${it.type.label} • expected ${photo.label}"
+                        val detection = runCatching { detector.classify(file.absolutePath) }.getOrNull()
+                        if (detection == null) {
+                            onCaptured(photo, file.absolutePath)
+                            detectionMessage = "Photo captured. Page type could not be verified."
+                            return@launch
+                        }
+                        val expected = when (photo) {
+                            RequiredPhoto.FRONT_COVER -> DetectedPhotoType.FRONT_COVER
+                            RequiredPhoto.TITLE_PAGE -> DetectedPhotoType.TITLE_PAGE
+                            RequiredPhoto.PUBLICATION_PAGE -> DetectedPhotoType.PUBLICATION_PAGE
+                            RequiredPhoto.ISBN_PAGE -> DetectedPhotoType.ISBN_PAGE
+                        }
+                        val confidentWrong = detection.confidence >= 0.80f &&
+                            detection.type != DetectedPhotoType.UNKNOWN && detection.type != expected
+                        if (confidentWrong) {
+                            file.delete()
+                            detectionMessage = "Detected " + detection.type.label + ". Retake the " + photo.label + "."
+                        } else {
+                            onCaptured(photo, file.absolutePath)
+                            detectionMessage = "Captured " + photo.label
                         }
                     }
+                }                    }
                 }
             }
         )
