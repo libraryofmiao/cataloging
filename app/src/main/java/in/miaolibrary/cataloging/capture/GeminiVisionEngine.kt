@@ -20,33 +20,91 @@ class GeminiVisionEngine(private val apiKey: String, private val model: String =
 
     override suspend fun extract(photoPaths: List<String>): ExtractedBook = withContext(Dispatchers.IO) {
         require(apiKey.isNotBlank()) { "Gemini API key is not configured." }
-        val input = JSONArray().put(JSONObject().put("type", "text").put("text", PROMPT))
+
+        val parts = JSONArray()
+            .put(JSONObject().put("text", PROMPT))
+
         photoPaths.forEach { path ->
             val file = File(path)
             require(file.exists()) { "Photograph is missing: " + file.name }
-            input.put(JSONObject().put("type", "image").put("mime_type", "image/jpeg").put("data", Base64.encodeToString(compress(file), Base64.NO_WRAP)))
+            parts.put(
+                JSONObject()
+                    .put("inline_data", JSONObject()
+                        .put("mime_type", "image/jpeg")
+                        .put("data", Base64.encodeToString(compress(file), Base64.NO_WRAP)))
+            )
         }
-        val schema = JSONObject().put("type", "object").put("properties", JSONObject()
-            .put("title", nullable()).put("author", nullable()).put("publisher", nullable())
-            .put("publicationDate", nullable()).put("publicationPlace", nullable()).put("isbn", nullable())
-            .put("edition", nullable()).put("pages", nullable()).put("preliminaryPages", nullable())
-            .put("illustrations", nullable()).put("dimensions", nullable()).put("language", nullable())
-            .put("printedPrice", nullable()).put("series", nullable()).put("contents", nullable())
-            .put("summary", nullable()).put("physicalWarnings", JSONObject().put("type", "array").put("items", JSONObject().put("type", "string"))))
-            .put("required", JSONArray().apply { listOf("title","author","publisher","publicationDate","publicationPlace","isbn","edition","pages","preliminaryPages","illustrations","dimensions","language","printedPrice","series","contents","summary","physicalWarnings").forEach(::put) })
-        val body = JSONObject().put("model", model).put("input", input).put("store", false)
-            .put("system_instruction", SYSTEM).put("response_format", JSONObject().put("type", "text").put("mime_type", "application/json").put("schema", schema))
-            .toString().toRequestBody("application/json".toMediaType())
-        val request = Request.Builder().url("https://generativelanguage.googleapis.com/v1beta/interactions")
-            .addHeader("x-goog-api-key", apiKey).post(body).build()
-        http.newCall(request).execute().use { response ->
-            val raw = response.body?.string().orEmpty()
-            if (!response.isSuccessful) throw IllegalStateException("Gemini request failed (" + response.code + "): " + raw.take(500))
-            parse(raw)
+
+        val schema = JSONObject()
+            .put("type", "OBJECT")
+            .put("properties", JSONObject()
+                .put("title", nullable())
+                .put("author", nullable())
+                .put("publisher", nullable())
+                .put("publicationDate", nullable())
+                .put("publicationPlace", nullable())
+                .put("isbn", nullable())
+                .put("edition", nullable())
+                .put("pages", nullable())
+                .put("preliminaryPages", nullable())
+                .put("illustrations", nullable())
+                .put("dimensions", nullable())
+                .put("language", nullable())
+                .put("printedPrice", nullable())
+                .put("series", nullable())
+                .put("contents", nullable())
+                .put("summary", nullable())
+                .put("physicalWarnings", JSONObject()
+                    .put("type", "ARRAY")
+                    .put("items", JSONObject().put("type", "STRING"))))
+            .put("required", JSONArray().apply {
+                listOf(
+                    "title", "author", "publisher", "publicationDate",
+                    "publicationPlace", "isbn", "edition", "pages",
+                    "preliminaryPages", "illustrations", "dimensions",
+                    "language", "printedPrice", "series", "contents",
+                    "summary", "physicalWarnings"
+                ).forEach(::put)
+            })
+
+        val body = JSONObject()
+            .put("systemInstruction", JSONObject()
+                .put("parts", JSONArray().put(JSONObject().put("text", SYSTEM))))
+            .put("contents", JSONArray().put(
+                JSONObject()
+                    .put("role", "user")
+                    .put("parts", parts)
+            ))
+            .put("generationConfig", JSONObject()
+                .put("responseMimeType", "application/json")
+                .put("responseSchema", schema))
+            .toString()
+            .toRequestBody("application/json".toMediaType())
+
+        val request = Request.Builder()
+            .url("https://generativelanguage.googleapis.com/v1beta/models/$model:generateContent")
+            .addHeader("x-goog-api-key", apiKey)
+            .addHeader("Content-Type", "application/json")
+            .post(body)
+            .build()
+
+        var lastError = ""
+        repeat(4) { attempt ->
+            http.newCall(request).execute().use { response ->
+                val raw = response.body?.string().orEmpty()
+                if (response.isSuccessful) return@withContext parse(raw)
+
+                lastError = "Gemini request failed (" + response.code + "): " + raw.take(500)
+                if (response.code != 429 && response.code != 503 && response.code != 500 && response.code != 408) {
+                    throw IllegalStateException(lastError)
+                }
+            }
+            if (attempt < 3) kotlinx.coroutines.delay((1000L shl attempt) + (0..500).random())
         }
+        throw IllegalStateException(lastError)
     }
 
-    private fun nullable() = JSONObject().put("type", JSONArray().put("string").put("null"))
+    private fun nullable() = JSONObject().put("type", "STRING").put("nullable", true)
 
     private fun compress(file: File): ByteArray {
         val source = BitmapFactory.decodeFile(file.absolutePath) ?: error("Could not read " + file.name)
