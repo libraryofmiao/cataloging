@@ -12,6 +12,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import `in`.miaolibrary.cataloging.capture.*
 import `in`.miaolibrary.cataloging.model.CatalogRecord
+import `in`.miaolibrary.cataloging.model.CatalogDraftStore
 import `in`.miaolibrary.cataloging.ui.ProductionCatalogingScreenV2
 
 class MainActivity : ComponentActivity() {
@@ -20,6 +21,7 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             val photoPrefs = remember { getSharedPreferences("cataloging_photos", MODE_PRIVATE) }
+            val draftStore = remember { CatalogDraftStore(this@MainActivity) }
             MaterialTheme(colorScheme = lightColorScheme(
                 primary = androidx.compose.ui.graphics.Color(0xFF2457D6),
                 secondary = androidx.compose.ui.graphics.Color(0xFF5A6072),
@@ -30,7 +32,7 @@ class MainActivity : ComponentActivity() {
                     var capture by remember { mutableStateOf(PhotoCaptureState.restore(photoPrefs)) }
                     var camera by remember { mutableStateOf(true) }
                     var extracting by remember { mutableStateOf(false) }
-                    var record by remember { mutableStateOf<CatalogRecord?>(null) }
+                    var record by remember { mutableStateOf<CatalogRecord?>(draftStore.get()) }
                     var error by remember { mutableStateOf<String?>(null) }
                     when {
                         camera -> CameraCaptureScreen(capture,
@@ -40,7 +42,7 @@ class MainActivity : ComponentActivity() {
                         extracting -> {
                             LaunchedEffect(capture) {
                                 runCatching { BookExtractionCoordinator(GeminiVisionEngine()).extract(capture) }
-                                    .onSuccess { record = it }
+                                    .onSuccess { record = it; draftStore.save(it) }
                                     .onFailure { error = it.message ?: it.toString() }
                                 extracting = false
                             }
