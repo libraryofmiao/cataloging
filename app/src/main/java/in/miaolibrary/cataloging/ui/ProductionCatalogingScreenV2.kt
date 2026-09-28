@@ -39,7 +39,7 @@ fun ProductionCatalogingScreenV2(initial: CatalogRecord? = null, onStartNewBook:
     var source by remember { mutableStateOf(prefs.getString("acquisition_source", "") ?: "") }
     var itemType by remember { mutableStateOf("BOOKS") }
     var copies by remember { mutableIntStateOf(1) }
-    var purchasePrice by remember { mutableStateOf("") }
+    var purchasePrice by remember { mutableStateOf(initial?.printedPrices?.firstOrNull().orEmpty()) }
     var donorDetails by remember { mutableStateOf("") }
     var ddcVerified by remember { mutableStateOf(initial?.ddcEdition == "23") }
     var subjectsVerified by remember { mutableStateOf(initial?.subjects?.isEmpty() != false) }
@@ -81,7 +81,7 @@ fun ProductionCatalogingScreenV2(initial: CatalogRecord? = null, onStartNewBook:
                 FieldV2("Illustrations", record.physicalDescription.illustrations.joinToString("; ")) { record = record.copy(physicalDescription = record.physicalDescription.copy(illustrations = it.split(";").map(String::trim).filter(String::isNotBlank))) }
                 FieldV2("Dimensions", record.physicalDescription.dimensions.orEmpty()) { record = record.copy(physicalDescription = record.physicalDescription.copy(dimensions = it.ifBlank { null })) }
                 FieldV2("ISBN", record.isbns.firstOrNull().orEmpty()) { record = record.copy(isbns = it.split(",").map(String::trim).filter(String::isNotBlank)) }
-                FieldV2("Printed price", record.printedPrices.joinToString(", ")) { record = record.copy(printedPrices = it.split(",").map(String::trim).filter(String::isNotBlank)) }
+                FieldV2("Printed price *", purchasePrice) { purchasePrice = it; record = record.copy(printedPrices = if (it.isBlank()) emptyList() else listOf(it.trim())) }
                 FieldV2("Languages (comma-separated)", record.languages.joinToString(", ") { it.name }) { record = record.copy(languages = parseLanguages(it)) }
                 FieldV2("Series", record.series.orEmpty()) { record = record.copy(series = it.ifBlank { null }) }
                 FieldV2("Contents", record.contents.orEmpty()) { record = record.copy(contents = it.ifBlank { null }) }
@@ -153,14 +153,14 @@ fun ProductionCatalogingScreenV2(initial: CatalogRecord? = null, onStartNewBook:
                     Text(copies.toString() + " copies", Modifier.padding(16.dp))
                     Button({ copies = (copies + 1).coerceAtMost(999) }) { Text("+") }
                 }
-                FieldV2("Purchase price (optional)", purchasePrice) { purchasePrice = it }
+                FieldV2("Printed price *", purchasePrice) { purchasePrice = it; record = record.copy(printedPrices = if (it.isBlank()) emptyList() else listOf(it.trim())) }
                 if (source == "Donation") FieldV2("Donor details", donorDetails) { donorDetails = it }
                 Button({
                     val n = Aacr2Normalizer.normalize(record)
                     record = n.record
                     message = n.issues.joinToString("\n") { it.message }.takeIf(String::isNotBlank)
                     if (n.valid && record.ddc != null && ddcVerified && location.isNotBlank() && source.isNotBlank() &&
-                        (source != "Donation" || donorDetails.isNotBlank())) {
+                        (source != "Donation" || donorDetails.isNotBlank()) && purchasePrice.isNotBlank()) {
                         drafts = CopyDraftFactory(BarcodeSequence(context)).create(
                             record, copies, location, source, itemType, parsePurchasePrice(purchasePrice),
                             donorDetails.takeIf { source == "Donation" }
@@ -168,7 +168,7 @@ fun ProductionCatalogingScreenV2(initial: CatalogRecord? = null, onStartNewBook:
                         approved = false
                         step = 4
                     }
-                }, enabled = location.isNotBlank() && source.isNotBlank() && record.ddc != null && ddcVerified, modifier = Modifier.fillMaxWidth()) {
+                }, enabled = location.isNotBlank() && source.isNotBlank() && record.ddc != null && ddcVerified && purchasePrice.isNotBlank(), modifier = Modifier.fillMaxWidth()) {
                     Text("FINAL REVIEW")
                 }
                 message?.let { Text(it, color = MaterialTheme.colorScheme.error) }
