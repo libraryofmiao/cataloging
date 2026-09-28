@@ -3,6 +3,7 @@ package `in`.miaolibrary.cataloging.capture
 import `in`.miaolibrary.cataloging.ddc.DdcSourceClient
 import `in`.miaolibrary.cataloging.ddc.LibraryOfCongressDdcClient
 import `in`.miaolibrary.cataloging.match.DdcMatcher
+import `in`.miaolibrary.cataloging.match.OpenLibraryClient
 import `in`.miaolibrary.cataloging.model.*
 
 class BookExtractionCoordinator(
