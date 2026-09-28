@@ -13,7 +13,7 @@ class BookExtractionCoordinator(
     private val openLibrary: OpenLibraryClient = OpenLibraryClient()
 ) {
     suspend fun extract(state: PhotoCaptureState): CatalogRecord {
-        check(state.isComplete()) { "All four required photographs are required" }
+        check(state.allPhotos().isNotEmpty()) { "Add at least one photograph" }
         val r = vision.extract(state.allPhotos())
 
         val authorPerson = parsePerson(r.author)
@@ -40,6 +40,7 @@ class BookExtractionCoordinator(
             notes = r.physicalWarnings?.let(::listOf) ?: emptyList()
         )
 
+        val identityMatches = runCatching { openLibrary.findIdentityMatches(isbn, base.titleProper, r.author) }.getOrDefault(emptyList())
         val candidates = runCatching {
             kotlinx.coroutines.coroutineScope {
                 val a = kotlinx.coroutines.async { ddcSources.find(isbn, base.titleProper, r.author) }
@@ -63,10 +64,16 @@ class BookExtractionCoordinator(
         addEvidence("264$c", r.publicationDate)
         addEvidence("020$a", r.isbn)
         addEvidence("020$c", r.printedPrice)
+        identityMatches.firstOrNull()?.let { match ->
+            if (!match.title.isNullOrBlank()) evidenceFields["external.title"] = listOf(EvidenceValue(match.title, EvidenceSource.EXTERNAL_CATALOGUE, match.confidence, false))
+            if (!match.author.isNullOrBlank()) evidenceFields["external.author"] = listOf(EvidenceValue(match.author, EvidenceSource.EXTERNAL_CATALOGUE, match.confidence, false))
+            if (!match.isbn.isNullOrBlank()) evidenceFields["external.isbn"] = listOf(EvidenceValue(match.isbn, EvidenceSource.EXTERNAL_CATALOGUE, match.confidence, false))
+        }
 
         val evidence = BookEvidence(
             photos = state.allPhotos(),
             fields = evidenceFields,
+            identityMatches = identityMatches,
             ddcCandidates = candidates
         )
         val withEvidence = base.copy(evidence = evidence)
