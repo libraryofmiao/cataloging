@@ -29,18 +29,18 @@ fun CameraCaptureScreen(
 ) {
     val context = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
-    var granted by remember { mutableStateOf(false) }
+    var cameraPermissionGranted by remember { mutableStateOf(false) }
     var imageCapture by remember { mutableStateOf<ImageCapture?>(null) }
 
     val permissionLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestPermission()
-    ) { granted = it }
+    ) { isGranted -> cameraPermissionGranted = isGranted }
 
     LaunchedEffect(Unit) {
         permissionLauncher.launch(Manifest.permission.CAMERA)
     }
 
-    if (!granted) {
+    if (!cameraPermissionGranted) {
         Text(
             text = "Camera permission is required.",
             modifier = Modifier.padding(24.dp)
