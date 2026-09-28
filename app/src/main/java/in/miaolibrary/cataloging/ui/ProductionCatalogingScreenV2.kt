@@ -168,7 +168,7 @@ fun ProductionCatalogingScreenV2(initial: CatalogRecord? = null) {
                 Text("Location: " + location + " • Source: " + source + " • Type: " + itemType)
                 drafts.forEach { Text("Copy " + it.copyNumber + ": barcode " + it.barcode) }
                 HorizontalDivider()
-                Field("Koha API token", token, password = true) {
+                Field("Koha API token", token, {
                     token = it
                     tokenStore.save(it)
                 }
