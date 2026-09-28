@@ -62,7 +62,18 @@ class MainActivity : ComponentActivity() {
                             Text(error!!)
                             Button(onClick = { error = null; camera = true; extracting = false }, Modifier.fillMaxWidth()) { Text("CAPTURE AGAIN") }
                         }
-                        else -> ProductionCatalogingScreenV2(initial = record)
+                        else -> ProductionCatalogingScreenV2(
+                            initial = record,
+                            onStartNewBook = {
+                                draftStore.clear()
+                                capture.clearSaved(photoPrefs)
+                                capture = PhotoCaptureState()
+                                record = null
+                                error = null
+                                camera = true
+                                extracting = false
+                            }
+                        )
                     }
                 }
             }
