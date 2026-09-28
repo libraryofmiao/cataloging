@@ -10,7 +10,7 @@ data class NormalizationResult(val record: CatalogRecord, val issues: List<Valid
 
 object Aacr2Normalizer {
     private val supportedLanguages = setOf("eng", "hin", "asm", "ben", "nep")
-    private val ddcPattern = Regex("""^\\d{3}(\\.\\d+)?$""")
+    private val ddcPattern = Regex("""^\d{3}(\.\d+)?$""")
 
     fun normalize(input: CatalogRecord): NormalizationResult {
         val issues = mutableListOf<ValidationIssue>()
