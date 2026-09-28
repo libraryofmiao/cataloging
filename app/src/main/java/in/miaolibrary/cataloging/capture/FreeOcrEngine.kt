@@ -1,4 +1,4 @@
-package in.miaolibrary.cataloging.capture
+package `in`.miaolibrary.cataloging.capture
 
 import android.graphics.BitmapFactory
 import com.google.mlkit.vision.common.InputImage
