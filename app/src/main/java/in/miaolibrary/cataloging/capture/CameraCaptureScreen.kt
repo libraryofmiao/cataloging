@@ -26,6 +26,7 @@ import java.io.File
 fun CameraCaptureScreen(
     state: PhotoCaptureState,
     onCaptured: (RequiredPhoto, String) -> Unit,
+    onOptionalCaptured: (String) -> Unit,
     onComplete: () -> Unit
 ) {
     val context = LocalContext.current
@@ -101,6 +102,26 @@ fun CameraCaptureScreen(
             }
         )
     }
+    fun captureOptional(label: String) {
+        val directory = File(context.filesDir, "cataloging")
+        directory.mkdirs()
+        val file = File(directory, "OPTIONAL_" + System.currentTimeMillis() + ".jpg")
+        val output = ImageCapture.OutputFileOptions.Builder(file).build()
+        val camera = imageCapture ?: return
+        busy = true
+        camera.takePicture(output, context.mainExecutor, object : ImageCapture.OnImageSavedCallback {
+            override fun onError(exception: ImageCaptureException) {
+                busy = false
+                detectionMessage = "Could not save the optional photograph. Please try again."
+            }
+            override fun onImageSaved(outputFileResults: ImageCapture.OutputFileResults) {
+                busy = false
+                onOptionalCaptured(file.absolutePath)
+                detectionMessage = "Added optional page: " + label
+            }
+        })
+    }
+
     Box(modifier = Modifier.fillMaxSize()) {
         AndroidView(
             factory = { ctx ->
@@ -157,6 +178,17 @@ fun CameraCaptureScreen(
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Text(if (busy) "SAVING…" else "CAPTURE")
+            }
+
+            if (state.isComplete()) {
+                Text("Optional photographs", style = androidx.compose.material3.MaterialTheme.typography.titleMedium)
+                Text("Add contents, preface/introduction, or any other useful bibliographic page. These are sent to Gemini as additional evidence.")
+                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Button({ captureOptional("Contents") }, enabled = !busy, modifier = Modifier.weight(1f)) { Text("CONTENTS") }
+                    Button({ captureOptional("Preface") }, enabled = !busy, modifier = Modifier.weight(1f)) { Text("PREFACE") }
+                }
+                Button({ captureOptional("Other page") }, enabled = !busy, modifier = Modifier.fillMaxWidth()) { Text("OTHER PAGE") }
+                Text("Optional pages captured: " + state.optionalPhotos.size)
             }
 
             Button(
