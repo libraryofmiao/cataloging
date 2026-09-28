@@ -122,7 +122,8 @@ fun CameraCaptureScreen(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(16.dp)
-                .align(Alignment.BottomCenter)\n                .navigationBarsPadding()
+                .align(Alignment.BottomCenter)
+                .navigationBarsPadding()
         ) {
             val nextPhoto = state.next()
 
