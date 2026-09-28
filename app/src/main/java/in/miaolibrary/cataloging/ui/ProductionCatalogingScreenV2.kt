@@ -153,7 +153,6 @@ fun ProductionCatalogingScreenV2(initial: CatalogRecord? = null, onStartNewBook:
                     Text(copies.toString() + " copies", Modifier.padding(16.dp))
                     Button({ copies = (copies + 1).coerceAtMost(999) }) { Text("+") }
                 }
-                FieldV2("Printed price *", purchasePrice) { purchasePrice = it; record = record.copy(printedPrices = if (it.isBlank()) emptyList() else listOf(it.trim())) }
                 if (source == "Donation") FieldV2("Donor details", donorDetails) { donorDetails = it }
                 Button({
                     val n = Aacr2Normalizer.normalize(record)
