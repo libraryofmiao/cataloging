@@ -341,7 +341,7 @@ private fun languageCode(value: String): String = when (value.lowercase()) {
     "bengali", "ben" -> "ben"
     "nepali", "nep" -> "nep"
     else -> value.lowercase().take(3)
-
+}
 
 @Composable
 private fun Aacr2Preview(record: CatalogRecord) {
