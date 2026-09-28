@@ -2,7 +2,7 @@ package in.miaolibrary.cataloging.capture
 
 import in.miaolibrary.cataloging.model.CatalogRecord
 
-class BookExtractionCoordinator(private val vision:VisionEngine){
+class BookExtractionCoordinator(private val vision:VisionEngine = FreeOnDeviceVisionEngine()){
  suspend fun extract(state:PhotoCaptureState):CatalogRecord{
   check(state.isComplete()){"All four required photographs are required"}
   val result=vision.extract(state.photos.values.toList())
