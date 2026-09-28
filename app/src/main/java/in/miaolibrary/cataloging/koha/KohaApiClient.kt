@@ -37,7 +37,7 @@ class KohaApiClient(
             put("external_id", c.barcode); put("home_library_id", c.homeLibrary); put("holding_library_id", c.holdingLibrary)
             put("location", c.location); put("permanent_location", c.location); put("item_type_id", c.itemType)
             put("callnumber", c.callNumber); put("call_number_source", "ddc"); put("acquisition_date", c.acquisitionDate)
-            put("acquisition_source", c.acquisitionSource); c.purchasePrice?.let { put("purchase_price", it) }; put("copy_number", c.copyNumber)
+            put("acquisition_source", c.acquisitionSource); c.purchasePrice?.let { put("purchase_price", it) }; c.donorDetails?.takeIf { it.isNotBlank() }?.let { put("internal_notes", "Donor: $it") }; put("copy_number", c.copyNumber)
         }.toString()
         val req = Request.Builder().url("${baseUrl}/biblios/${biblioId}/items")
             .post(body.toRequestBody("application/json".toMediaType())).header("Authorization", "Bearer ${token}").build()
