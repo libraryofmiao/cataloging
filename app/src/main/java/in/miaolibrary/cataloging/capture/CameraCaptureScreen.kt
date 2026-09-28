@@ -97,12 +97,10 @@ fun CameraCaptureScreen(
                             detectionMessage = "Captured " + photo.label
                         }
                     }
-                }                    }
                 }
             }
         )
     }
-
     Box(modifier = Modifier.fillMaxSize()) {
         AndroidView(
             factory = { ctx ->
