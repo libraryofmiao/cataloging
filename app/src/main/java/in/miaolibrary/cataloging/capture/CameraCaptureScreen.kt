@@ -10,7 +10,11 @@ import androidx.camera.core.Preview
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.camera.view.PreviewView
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import kotlinx.coroutines.launch
@@ -122,6 +126,8 @@ fun CameraCaptureScreen(
         })
     }
 
+    val nextPhoto = state.next()
+
     Box(modifier = Modifier.fillMaxSize()) {
         AndroidView(
             factory = { ctx ->
@@ -157,44 +163,49 @@ fun CameraCaptureScreen(
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(16.dp)
                 .align(Alignment.BottomCenter)
                 .navigationBarsPadding()
+                .heightIn(max = 360.dp)
+                .verticalScroll(rememberScrollState())
+                .padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(10.dp)
         ) {
-            val nextPhoto = state.next()
-
-            Text("Add useful pages", style = androidx.compose.material3.MaterialTheme.typography.titleMedium)
+            Text("Add useful pages", style = MaterialTheme.typography.titleMedium)
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 RequiredPhoto.entries.take(2).forEach { photo ->
                     val captured = state.photos[photo]?.let { File(it).exists() } == true
+                    val isNext = photo == nextPhoto
                     Button(
                         onClick = { capturePhoto(photo) },
                         enabled = !busy,
-                        modifier = Modifier.weight(1f)
+                        colors = if (isNext) ButtonDefaults.buttonColors() else ButtonDefaults.filledTonalButtonColors(),
+                        modifier = Modifier.weight(1f).heightIn(min = 48.dp)
                     ) { Text(if (captured) "RETAKE " + photo.label else photo.label) }
                 }
             }
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 RequiredPhoto.entries.drop(2).forEach { photo ->
                     val captured = state.photos[photo]?.let { File(it).exists() } == true
+                    val isNext = photo == nextPhoto
                     Button(
                         onClick = { capturePhoto(photo) },
                         enabled = !busy,
-                        modifier = Modifier.weight(1f)
+                        colors = if (isNext) ButtonDefaults.buttonColors() else ButtonDefaults.filledTonalButtonColors(),
+                        modifier = Modifier.weight(1f).heightIn(min = 48.dp)
                     ) { Text(if (captured) "RETAKE " + photo.label else photo.label) }
                 }
             }
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                Button({ captureOptional("Contents") }, enabled = !busy, modifier = Modifier.weight(1f)) { Text("CONTENTS") }
-                Button({ captureOptional("PREFACE") }, enabled = !busy, modifier = Modifier.weight(1f)) { Text("PREFACE") }
+                Button({ captureOptional("Contents") }, enabled = !busy, modifier = Modifier.weight(1f).heightIn(min = 48.dp)) { Text("CONTENTS") }
+                Button({ captureOptional("PREFACE") }, enabled = !busy, modifier = Modifier.weight(1f).heightIn(min = 48.dp)) { Text("PREFACE") }
             }
-            Button({ captureOptional("OTHER PAGE") }, enabled = !busy, modifier = Modifier.fillMaxWidth()) { Text("OTHER PAGE") }
+            Button({ captureOptional("OTHER PAGE") }, enabled = !busy, modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp)) { Text("OTHER PAGE") }
             detectionMessage?.let { Text(it) }
             Text(state.allPhotos().size.toString() + " photo(s) ready")
             Button(
                 onClick = onComplete,
                 enabled = state.allPhotos().isNotEmpty() && !busy,
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp)
             ) { Text("USE PHOTOS") }
         }
 
